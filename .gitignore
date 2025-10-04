@@ -5,3 +5,6 @@
 /build/
 /install/
 /log/
+
+# temporary in gitignore
+**/create_gridworld/rviz/
