@@ -1,0 +1,6 @@
+**/.vscode/
+
+# Colcon build folders
+/build/
+/install/
+/log/

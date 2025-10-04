@@ -7,9 +7,37 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
+# CPP
+include_directories(include)
+
+add_executable(create_gridworld_node src/create_gridworld_node.cpp)
+ament_target_dependencies(create_gridworld_node rclcpp)
+
+install(TARGETS
+  create_gridworld_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Python
+ament_python_install_package(${PROJECT_NAME})
+
+install(PROGRAMS
+  scripts/create_gridworld_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Launch
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
