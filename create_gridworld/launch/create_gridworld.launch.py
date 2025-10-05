@@ -14,21 +14,8 @@ def generate_launch_description():
     ])
 
     return LaunchDescription([
-        # Node(
-        #     package="create_gridworld",
-        #     executable="create_gridworld_node.py",
-        #     name="create_gridworld_node",
-        #     output="screen",
-        #     parameters=[{
-        #         "grid_width": 50,
-        #         "grid_height": 50,
-        #         "resolution": 0.1
-        #     }]
-        # ),
-
         SetEnvironmentVariable('QT_QPA_PLATFORM', 'xcb'),
         SetEnvironmentVariable('QT_QPA_PLATFORM_PLUGIN_PATH', ''),
-
 
         Node(
             package="create_gridworld",
@@ -49,11 +36,12 @@ def generate_launch_description():
             name="static_transform_publisher",
             arguments=["0", "0", "0", "0", "0", "0", "map", "base_link"]
         ),
-        # RViz2
+        # RViz2 with config file
         Node(
             package="rviz2",
             executable="rviz2",
             name="rviz2",
             output="screen",
+            arguments=["-d", rviz_config]
         ),
     ])
