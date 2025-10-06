@@ -47,11 +47,11 @@ create_gridworld_node:
     # Visualization settings
     visualization:
       # Node visualization
-      node_scale: 0.03         # Very small points for large 2D world
+      node_scale: 0.1         # Very small points for large 2D world
       node_color: [0.0, 1.0, 0.0, 0.2]  # Very transparent for performance
       
       # Edge visualization  
-      edge_width: 0.01         # Very thin lines
+      edge_width: 0.05         # Very thin lines
       edge_color: [0.0, 0.0, 1.0, 0.15]  # Very transparent
       
       # Obstacle visualization
@@ -59,7 +59,7 @@ create_gridworld_node:
       obstacle_color: [0.8, 0.2, 0.2, 0.9]  # Dark red, mostly opaque
       
       # Agent visualization
-      agent_scale: 1.5         # Larger agents to be visible in large world
+      agent_scale: 1.0         # Larger agents to be visible in large world
       agent_color: [0.0, 1.0, 1.0, 1.0]   # Cyan for 2D visibility
     
     # Frame settings

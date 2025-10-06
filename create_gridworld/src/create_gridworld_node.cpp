@@ -285,7 +285,7 @@ private:
         marker.header.stamp = timestamp;
         marker.ns = "grid_nodes";
         marker.id = 0;
-        marker.type = visualization_msgs::msg::Marker::POINTS;
+        marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
         marker.action = visualization_msgs::msg::Marker::ADD;
         marker.pose.orientation.w = 1.0;
 

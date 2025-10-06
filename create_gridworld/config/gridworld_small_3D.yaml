@@ -31,11 +31,11 @@ create_gridworld_node:
     # Visualization settings
     visualization:
       # Node visualization
-      node_scale: 0.2          # Larger points for small world visibility
+      node_scale: 0.1          # Larger points for small world visibility
       node_color: [0.0, 1.0, 0.0, 0.6]  # Green, semi-transparent
       
       # Edge visualization  
-      edge_width: 0.08         # Thicker lines for visibility
+      edge_width: 0.05         # Thicker lines for visibility
       edge_color: [0.0, 0.0, 1.0, 0.5]  # Blue, semi-transparent
       
       # Obstacle visualization
@@ -43,8 +43,8 @@ create_gridworld_node:
       obstacle_color: [1.0, 0.0, 0.0, 0.8]  # Red, mostly opaque
       
       # Agent visualization
-      agent_scale: 0.8         # Standard size for small world
-      agent_color: [0.0, 0.0, 1.0, 1.0]   # Blue, fully opaque
+      agent_scale: 0.5         # Standard size for small world
+      agent_color: [1.0, 0.0, 1.0, 1.0]   # Magenta for 3D contrast
     
     # Frame settings
     frame_id: "map"
