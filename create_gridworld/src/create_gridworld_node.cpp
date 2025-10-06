@@ -401,7 +401,6 @@ private:
     {
         visualization_msgs::msg::MarkerArray marker_array;
 
-        //agents are at node (5,5,0) and (20,20,0)
         std::vector<std::tuple<int, int, int>> agent_pos;
         for (const auto & pos : agent_start_positions_)
         {
@@ -416,7 +415,7 @@ private:
             marker.header.frame_id = frame_id_;
             marker.header.stamp = timestamp;
             marker.ns = "agents";
-            marker.id = agent_id++;
+            marker.id = agent_id;
             marker.type = visualization_msgs::msg::Marker::SPHERE;
             marker.action = visualization_msgs::msg::Marker::ADD;
             marker.pose.position.x = x * grid_resolution_;
@@ -432,6 +431,29 @@ private:
             marker.color.a = viz_config_.agent_color[3];
 
             marker_array.markers.push_back(marker);
+
+            visualization_msgs::msg::Marker text_marker;
+            text_marker.header.frame_id = frame_id_;
+            text_marker.header.stamp = timestamp;
+            text_marker.ns = "agent_labels";
+            text_marker.id = agent_id;
+            text_marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+            text_marker.action = visualization_msgs::msg::Marker::ADD;
+            text_marker.pose.position.x = x * grid_resolution_;
+            text_marker.pose.position.y = y * grid_resolution_;
+            text_marker.pose.position.z = z * grid_resolution_ + (grid_resolution_ * viz_config_.agent_scale * 0.5);
+            text_marker.pose.orientation.w = 1.0;
+            text_marker.text = "A_" + std::to_string(agent_id);
+
+            text_marker.scale.z = grid_resolution_ * 0.5; // Text height
+            text_marker.color.r = 1.0;
+            text_marker.color.g = 1.0;
+            text_marker.color.b = 1.0;
+            text_marker.color.a = 1.0;
+
+            marker_array.markers.push_back(text_marker);
+
+            agent_id++;
         }
 
         agent_markers_pub_->publish(marker_array);
