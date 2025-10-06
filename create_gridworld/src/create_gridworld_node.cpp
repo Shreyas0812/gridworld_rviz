@@ -13,36 +13,156 @@ public:
                             grid_width_(50), 
                             grid_height_(50), 
                             grid_depth_(10),
-                            grid_resolution_(1.0)
+                            grid_resolution_(1.0),
+                            publish_rate_(10.0),
+                            frame_id_("map")
     {
+        // Grid parameters
         this->declare_parameter("grid_width", grid_width_);
         this->declare_parameter("grid_height", grid_height_);
         this->declare_parameter("grid_depth", grid_depth_);
         this->declare_parameter("grid_resolution", grid_resolution_);
+        this->declare_parameter("publish_rate", publish_rate_);
+        this->declare_parameter("frame_id", frame_id_);
+        
+        // Obstacle regions as a list of lists: [[x1, y1, z1], [x2, y2, z2], ...]
+        this->declare_parameter("obstacle_regions", std::vector<int64_t>{});
+
+        // Agent positions as a list of lists: [[x1, y1, z1], [x2, y2, z2], ...]
+        this->declare_parameter("agent_positions", std::vector<int64_t>{});
+
+        // Declare visualization parameters
+        this->declare_parameter("visualization.node_scale", 0.1);
+        this->declare_parameter("visualization.node_color", std::vector<double>{0.0, 1.0, 0.0, 0.5});
+        this->declare_parameter("visualization.edge_width", 0.05);
+        this->declare_parameter("visualization.edge_color", std::vector<double>{0.0, 0.0, 1.0, 0.5});
+        this->declare_parameter("visualization.obstacle_scale", 0.9);
+        this->declare_parameter("visualization.obstacle_color", std::vector<double>{1.0, 0.0, 0.0, 0.8});
+        this->declare_parameter("visualization.agent_scale", 0.8);
+        this->declare_parameter("visualization.agent_color", std::vector<double>{0.0, 0.0, 1.0, 1.0});
+
+        // Declare topic parameters
+        this->declare_parameter("topics.nodes", std::string("gridworld/nodes"));
+        this->declare_parameter("topics.edges", std::string("gridworld/edges"));
+        this->declare_parameter("topics.obstacles", std::string("gridworld/obstacles"));
+        this->declare_parameter("topics.agents", std::string("gridworld/agents"));
 
         grid_width_ = this->get_parameter("grid_width").as_int();
         grid_height_ = this->get_parameter("grid_height").as_int();
         grid_depth_ = this->get_parameter("grid_depth").as_int();
         grid_resolution_ = this->get_parameter("grid_resolution").as_double();
 
-        // Publisher for the occupancy grid
-        grid_nodes_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("gridworld/nodes", 10);
-        
-        grid_edges_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("gridworld/edges", 10);
-        
-        agent_markers_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("gridworld/agents", 10);
+        // Retrieve obstacle_regions as a vector of integer arrays
+        auto flat_obstacles = this->get_parameter("obstacle_regions").as_integer_array();
+        obstacle_regions_.clear();
+        for (size_t i = 0; i < flat_obstacles.size(); i += 6) {
+            obstacle_regions_.emplace_back(std::vector<int64_t>{
+                flat_obstacles[i], flat_obstacles[i + 1], flat_obstacles[i + 2],
+                flat_obstacles[i + 3], flat_obstacles[i + 4], flat_obstacles[i + 5]
+            });
+        }
 
-        obstacles_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("gridworld/obstacles", 10);
+        auto flat_agents = this->get_parameter("agent_positions").as_integer_array();
+        agent_start_positions_.clear();
+        for (size_t i = 0; i < flat_agents.size(); i += 3) {
+            agent_start_positions_.emplace_back(std::vector<int64_t>{
+                flat_agents[i], flat_agents[i + 1], flat_agents[i + 2]
+            });
+        }
+
+        // Get visualization parameters
+        viz_config_.node_scale = this->get_parameter("visualization.node_scale").as_double();
+        viz_config_.node_color = this->get_parameter("visualization.node_color").as_double_array();
+        viz_config_.edge_width = this->get_parameter("visualization.edge_width").as_double();
+        viz_config_.edge_color = this->get_parameter("visualization.edge_color").as_double_array();
+        viz_config_.obstacle_scale = this->get_parameter("visualization.obstacle_scale").as_double();
+        viz_config_.obstacle_color = this->get_parameter("visualization.obstacle_color").as_double_array();
+        viz_config_.agent_scale = this->get_parameter("visualization.agent_scale").as_double();
+        viz_config_.agent_color = this->get_parameter("visualization.agent_color").as_double_array();
+        
+        // Get topic names
+        topic_name_.nodes = this->get_parameter("topics.nodes").as_string();
+        topic_name_.edges = this->get_parameter("topics.edges").as_string();
+        topic_name_.obstacles = this->get_parameter("topics.obstacles").as_string();
+        topic_name_.agents = this->get_parameter("topics.agents").as_string();
+
+        
+        RCLCPP_INFO(this->get_logger(), "Loaded %zu obstacle regions and %zu agent start positions", 
+        obstacle_regions_.size(), agent_start_positions_.size());
+        
+        // Publisher for the occupancy grid
+        grid_nodes_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.nodes, 10);
+        grid_edges_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.edges, 10);
+        obstacles_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.obstacles, 10);
+        agent_markers_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.agents, 10);
 
         // Timer to publish the grid at regular intervals
+        int timer_period_ms = static_cast<int>(1000.0 / publish_rate_);
         timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100),
+            std::chrono::milliseconds(timer_period_ms),
             std::bind(&CreateGridWorldNode::publish_gridworld, this)
         );
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        RCLCPP_INFO(this->get_logger(), "Grid width: %d", grid_width_);
+        RCLCPP_INFO(this->get_logger(), "Grid height: %d", grid_height_);
+        RCLCPP_INFO(this->get_logger(), "Grid depth: %d", grid_depth_);
+        RCLCPP_INFO(this->get_logger(), "Grid resolution: %.2f", grid_resolution_);
+        RCLCPP_INFO(this->get_logger(), "Publish rate: %.2f Hz", publish_rate_);
+        RCLCPP_INFO(this->get_logger(), "Frame ID: %s", frame_id_.c_str());
+
+        RCLCPP_INFO(this->get_logger(), "Obstacle regions:");
+        for (const auto & region : obstacle_regions_) {
+            std::ostringstream oss;
+            oss << "[";
+            for (size_t i = 0; i < region.size(); ++i) {
+                oss << region[i];
+                if (i + 1 < region.size()) oss << ", ";
+            }
+            oss << "]";
+            RCLCPP_INFO(this->get_logger(), "%s", oss.str().c_str());
+        }
+
+        RCLCPP_INFO(this->get_logger(), "Agent start positions:");
+        for (const auto & pos : agent_start_positions_) {
+            std::ostringstream oss;
+            oss << "[";
+            for (size_t i = 0; i < pos.size(); ++i) {
+                oss << pos[i];
+                if (i + 1 < pos.size()) oss << ", ";
+            }
+            oss << "]";
+            RCLCPP_INFO(this->get_logger(), "%s", oss.str().c_str());
+        }
+
+        RCLCPP_INFO(this->get_logger(), "Visualization config:");
+        RCLCPP_INFO(this->get_logger(), "  node_scale: %.2f", viz_config_.node_scale);
+        RCLCPP_INFO(this->get_logger(), "  node_color: [%.2f, %.2f, %.2f, %.2f]", 
+            viz_config_.node_color[0], viz_config_.node_color[1], viz_config_.node_color[2], viz_config_.node_color[3]);
+        RCLCPP_INFO(this->get_logger(), "  edge_width: %.2f", viz_config_.edge_width);
+        RCLCPP_INFO(this->get_logger(), "  edge_color: [%.2f, %.2f, %.2f, %.2f]", 
+            viz_config_.edge_color[0], viz_config_.edge_color[1], viz_config_.edge_color[2], viz_config_.edge_color[3]);
+        RCLCPP_INFO(this->get_logger(), "  obstacle_scale: %.2f", viz_config_.obstacle_scale);
+        RCLCPP_INFO(this->get_logger(), "  obstacle_color: [%.2f, %.2f, %.2f, %.2f]", 
+            viz_config_.obstacle_color[0], viz_config_.obstacle_color[1], viz_config_.obstacle_color[2], viz_config_.obstacle_color[3]);
+        RCLCPP_INFO(this->get_logger(), "  agent_scale: %.2f", viz_config_.agent_scale);
+        RCLCPP_INFO(this->get_logger(), "  agent_color: [%.2f, %.2f, %.2f, %.2f]", 
+            viz_config_.agent_color[0], viz_config_.agent_color[1], viz_config_.agent_color[2], viz_config_.agent_color[3]);
+
+        RCLCPP_INFO(this->get_logger(), "Topic names:");
+        RCLCPP_INFO(this->get_logger(), "  nodes: %s", topic_name_.nodes.c_str());
+        RCLCPP_INFO(this->get_logger(), "  edges: %s", topic_name_.edges.c_str());
+        RCLCPP_INFO(this->get_logger(), "  obstacles: %s", topic_name_.obstacles.c_str());
+        RCLCPP_INFO(this->get_logger(), "  agents: %s", topic_name_.agents.c_str());
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         initialize_grid();
 
-        RCLCPP_INFO(this->get_logger(), "CreateGridWorldNode has been started.");
+        RCLCPP_INFO(this->get_logger(), "CreateGridWorldNode started with %dx%dx%d grid, resolution %.2f", 
+                    grid_width_, grid_height_, grid_depth_, grid_resolution_);
     }
 private:
     struct GridNode
@@ -81,10 +201,24 @@ private:
 
     void add_obstacles()
     {
-        for(int i=15; i<35; i++) {
-            for(int j=15; j<35; j++) {
-                for(int k=0; k<grid_depth_; k++) {
-                    set_obstacle(i, j, k, true);
+        for (const auto & region : obstacle_regions_)
+        {
+            if (region.size() < 6) continue; // Invalid region
+            
+            int start_x = region[0];
+            int start_y = region[1];
+            int start_z = region[2];
+            int end_x = region[3];
+            int end_y = region[4];
+            int end_z = region[5];
+            for (int x = start_x; x <= end_x; ++x)
+            {
+                for (int y = start_y; y <= end_y; ++y)
+                {
+                    for (int z = start_z; z <= end_z; ++z)
+                    {
+                        set_obstacle(x, y, z, true);
+                    }
                 }
             }
         }
@@ -268,10 +402,15 @@ private:
         visualization_msgs::msg::MarkerArray marker_array;
 
         //agents are at node (5,5,0) and (20,20,0)
-        std::vector<std::tuple<int, int, int>> agent_positions = { {5, 5, 0}, {20, 20, 0} };
+        std::vector<std::tuple<int, int, int>> agent_pos;
+        for (const auto & pos : agent_start_positions_)
+        {
+            if (pos.size() < 3) continue;
+            agent_pos.emplace_back(pos[0], pos[1], pos[2]);
+        }
         
         int agent_id = 0;
-        for (const auto & [x, y, z] : agent_positions)
+        for (const auto & [x, y, z] : agent_pos)
         {
             visualization_msgs::msg::Marker marker;
             marker.header.frame_id = "map";
@@ -298,13 +437,38 @@ private:
         agent_markers_pub_->publish(marker_array);
     }
 
-    // Node members
+    // Grid
     int grid_width_;
     int grid_height_;
     int grid_depth_;
     double grid_resolution_;
 
-    // Occupancy grid message
+    double publish_rate_;
+    std::string frame_id_;
+    std::vector<std::vector<int64_t>> obstacle_regions_;
+    std::vector<std::vector<int64_t>> agent_start_positions_;
+
+    // Visualization parameters
+    struct VisualizationConfig {
+        double node_scale;
+        std::vector<double> node_color;
+        double edge_width;
+        std::vector<double> edge_color;
+        double obstacle_scale;
+        std::vector<double> obstacle_color;
+        double agent_scale;
+        std::vector<double> agent_color;
+    } viz_config_;
+
+    // Topic names
+    struct TopicConfig {
+        std::string nodes;
+        std::string edges;
+        std::string obstacles;
+        std::string agents;
+    } topic_name_;
+
+    // Grid nodes
     std::vector<GridNode> nodes_;
 
     // ROS2 publishers

@@ -49,11 +49,17 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
-# # RViz
-# install(DIRECTORY
-#   rviz
-#   DESTINATION share/${PROJECT_NAME}
-# )
+# config
+install(DIRECTORY
+  config
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+# RViz
+install(DIRECTORY
+  rviz
+  DESTINATION share/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 from launch.substitutions import PathJoinSubstitution
-from launch.actions import SetEnvironmentVariable, DeclareLaunchArgument
+from launch.actions import SetEnvironmentVariable, DeclareLaunchArgument, LogInfo
 
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
@@ -13,7 +13,16 @@ def generate_launch_description():
         "gridworld.rviz"
     ])
 
+    gridworld_params = PathJoinSubstitution([
+            FindPackageShare("create_gridworld"),
+            "config",
+            "gridworld_small_3D.yaml"
+        ])
+
     return LaunchDescription([
+
+        LogInfo(msg=['Loading parameters from: ', gridworld_params]),
+
         SetEnvironmentVariable('QT_QPA_PLATFORM', 'xcb'),
         SetEnvironmentVariable('QT_QPA_PLATFORM_PLUGIN_PATH', ''),
 
@@ -22,12 +31,8 @@ def generate_launch_description():
             executable="create_gridworld_node",
             name="create_gridworld_node",
             output="screen",
-            parameters=[{
-                "grid_width": 50,
-                "grid_height": 50,
-                "resolution": 0.1,
-                "publish_rate": 10.0
-            }]
+            parameters=[gridworld_params],
+            # arguments=['--ros-args', '--log-level', 'debug']
         ),
         # Static transform publisher for rviz
         Node(
