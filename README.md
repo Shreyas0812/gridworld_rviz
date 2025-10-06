@@ -100,6 +100,6 @@ create_gridworld/
 
 ## License
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.txt)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 
