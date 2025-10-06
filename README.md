@@ -74,7 +74,8 @@ ros2 launch create_gridworld create_gridworld.launch.py config_type:=large_3D
 - **Configurable**: Size, color, regions
 
 ### **Agents**
-- **Magenta circles** (2D) showing agent positions
+- **Magenta circles** showing agent positions
+- **White text labels** displaying "A_0", "A_1", etc. above each agent
 - **Configurable**: Size, color, initial positions
 
 ## Topics Published
@@ -85,6 +86,28 @@ ros2 launch create_gridworld create_gridworld.launch.py config_type:=large_3D
 | `/gridworld/edges` | `visualization_msgs/MarkerArray` | Connectivity visualization |
 | `/gridworld/obstacles` | `visualization_msgs/MarkerArray` | Obstacle visualization |
 | `/gridworld/agents` | `visualization_msgs/MarkerArray` | Agent position visualization |
+
+### Subscribed Topics
+| Topic | Message Type | Description |
+|-------|--------------|-------------|
+| `/agent_position` | `std_msgs/Int64MultiArray` | Individual agent position updates `[agent_index, x, y, z]` |
+
+## Dynamic Agent Control
+
+### Move Individual Agents
+
+Update a specific agent's position in real-time:
+
+```bash
+# Move agent 0 to position (5, 8, 2)
+ros2 topic pub /agent_position std_msgs/msg/Int64MultiArray "{data: [0, 5, 8, 2]}"
+
+# Move agent 1 to position (10, 15, 1)
+ros2 topic pub /agent_position std_msgs/msg/Int64MultiArray "{data: [1, 10, 15, 1]}"
+
+# Add new agent 3 at position (7, 12, 0)
+ros2 topic pub /agent_position std_msgs/msg/Int64MultiArray "{data: [3, 7, 12, 0]}"
+```
 
 ## Custom Configuration
 
