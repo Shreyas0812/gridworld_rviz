@@ -281,7 +281,7 @@ private:
         visualization_msgs::msg::MarkerArray marker_array;
         
         visualization_msgs::msg::Marker marker;
-        marker.header.frame_id = "map";
+        marker.header.frame_id = frame_id_;
         marker.header.stamp = timestamp;
         marker.ns = "grid_nodes";
         marker.id = 0;
@@ -289,14 +289,14 @@ private:
         marker.action = visualization_msgs::msg::Marker::ADD;
         marker.pose.orientation.w = 1.0;
 
-        marker.scale.x = grid_resolution_ * 0.1;
-        marker.scale.y = grid_resolution_ * 0.1;
-        marker.scale.z = grid_resolution_ * 0.1;
+        marker.scale.x = grid_resolution_ * viz_config_.node_scale;
+        marker.scale.y = grid_resolution_ * viz_config_.node_scale;
+        marker.scale.z = grid_resolution_ * viz_config_.node_scale;
 
-        marker.color.r = 0.0;
-        marker.color.g = 1.0;
-        marker.color.b = 0.0;
-        marker.color.a = 0.5;
+        marker.color.r = viz_config_.node_color[0];
+        marker.color.g = viz_config_.node_color[1];
+        marker.color.b = viz_config_.node_color[2];
+        marker.color.a = viz_config_.node_color[3];
 
         for (const auto & node : nodes_)
         {
@@ -318,7 +318,7 @@ private:
     {
         visualization_msgs::msg::MarkerArray marker_array;
         visualization_msgs::msg::Marker lines_marker;
-        lines_marker.header.frame_id = "map";
+        lines_marker.header.frame_id = frame_id_;
         lines_marker.header.stamp = timestamp;
         lines_marker.ns = "grid_edges";
         lines_marker.id = 0;
@@ -326,11 +326,11 @@ private:
         lines_marker.action = visualization_msgs::msg::Marker::ADD;
         lines_marker.pose.orientation.w = 1.0;
 
-        lines_marker.scale.x = 0.05; // Line width
-        lines_marker.color.r = 0.0;
-        lines_marker.color.g = 0.0;
-        lines_marker.color.b = 1.0;
-        lines_marker.color.a = 0.5;
+        lines_marker.scale.x = viz_config_.edge_width;
+        lines_marker.color.r = viz_config_.edge_color[0];
+        lines_marker.color.g = viz_config_.edge_color[1];
+        lines_marker.color.b = viz_config_.edge_color[2];
+        lines_marker.color.a = viz_config_.edge_color[3];
 
         for (size_t i=0; i< nodes_.size(); i++)
         {
@@ -364,7 +364,7 @@ private:
         visualization_msgs::msg::MarkerArray marker_array;
         visualization_msgs::msg::Marker cubes_marker;
 
-        cubes_marker.header.frame_id = "map";
+        cubes_marker.header.frame_id = frame_id_;
         cubes_marker.header.stamp = timestamp;
         cubes_marker.ns = "obstacles";
         cubes_marker.id = 0;
@@ -372,14 +372,14 @@ private:
         cubes_marker.action = visualization_msgs::msg::Marker::ADD;
         cubes_marker.pose.orientation.w = 1.0;
 
-        cubes_marker.scale.x = grid_resolution_ * 0.9;
-        cubes_marker.scale.y = grid_resolution_ * 0.9;
-        cubes_marker.scale.z = grid_resolution_ * 0.9;
+        cubes_marker.scale.x = grid_resolution_ * viz_config_.obstacle_scale;
+        cubes_marker.scale.y = grid_resolution_ * viz_config_.obstacle_scale;
+        cubes_marker.scale.z = grid_resolution_ * viz_config_.obstacle_scale;
 
-        cubes_marker.color.r = 1.0;
-        cubes_marker.color.g = 0.0;
-        cubes_marker.color.b = 0.0;
-        cubes_marker.color.a = 0.8;
+        cubes_marker.color.r = viz_config_.obstacle_color[0];
+        cubes_marker.color.g = viz_config_.obstacle_color[1];
+        cubes_marker.color.b = viz_config_.obstacle_color[2];
+        cubes_marker.color.a = viz_config_.obstacle_color[3];
 
         for (const auto & node : nodes_)
         {
@@ -413,7 +413,7 @@ private:
         for (const auto & [x, y, z] : agent_pos)
         {
             visualization_msgs::msg::Marker marker;
-            marker.header.frame_id = "map";
+            marker.header.frame_id = frame_id_;
             marker.header.stamp = timestamp;
             marker.ns = "agents";
             marker.id = agent_id++;
@@ -423,13 +423,13 @@ private:
             marker.pose.position.y = y * grid_resolution_;
             marker.pose.position.z = z * grid_resolution_;
             marker.pose.orientation.w = 1.0;
-            marker.scale.x = grid_resolution_ * 0.8;
-            marker.scale.y = grid_resolution_ * 0.8;
-            marker.scale.z = grid_resolution_ * 0.8;
-            marker.color.r = 0.0;
-            marker.color.g = 0.0;
-            marker.color.b = 1.0;
-            marker.color.a = 1.0;
+            marker.scale.x = grid_resolution_ * viz_config_.agent_scale;
+            marker.scale.y = grid_resolution_ * viz_config_.agent_scale;
+            marker.scale.z = grid_resolution_ * viz_config_.agent_scale;
+            marker.color.r = viz_config_.agent_color[0];
+            marker.color.g = viz_config_.agent_color[1];
+            marker.color.b = viz_config_.agent_color[2];
+            marker.color.a = viz_config_.agent_color[3];
 
             marker_array.markers.push_back(marker);
         }

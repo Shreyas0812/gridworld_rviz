@@ -10,7 +10,7 @@ def generate_launch_description():
     rviz_config = PathJoinSubstitution([
         FindPackageShare("create_gridworld"),
         "rviz", 
-        "gridworld.rviz"
+        "gridworld_config.rviz"
     ])
 
     config_type_arg = DeclareLaunchArgument(

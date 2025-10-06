@@ -50,7 +50,7 @@ create_gridworld_node:
       obstacle_color: [1.0, 0.0, 0.0, 0.9]  # Bright red, mostly opaque
       
       # Agent visualization
-      agent_scale: 0.8         # Standard size
+      agent_scale: 0.2         # Standard size
       agent_color: [1.0, 0.0, 1.0, 1.0]   # Magenta for 2D contrast
     
     # Frame settings
