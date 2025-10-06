@@ -1,57 +1,59 @@
-# Small 2D Gridworld Configuration Parameters
+# Large 3D Gridworld Configuration Parameters
 create_gridworld_node:
   ros__parameters:
-    # Grid dimensions - Small 2D world (flat)
-    grid_width: 30
-    grid_height: 30  
-    grid_depth: 1    # Only one layer for 2D
+    # Grid dimensions - Large 3D world
+    grid_width: 100
+    grid_height: 100  
+    grid_depth: 20
     
     # Grid resolution (meters per cell)
     grid_resolution: 1.0
     
     # Publishing rate (Hz)
-    publish_rate: 20.0  # High rate for small, responsive world
+    publish_rate: 5.0  # Lower rate for large world to reduce computational load
     
     # Obstacle configuration - Flattened array format
     # Each obstacle region: [start_x, start_y, start_z, end_x, end_y, end_z]
     obstacle_regions: [
-      0, 0, 0, 29, 2, 0,      # Bottom border
-      0, 28, 0, 29, 29, 0,    # Top border
-      0, 0, 0, 2, 29, 0,      # Left border  
-      28, 0, 0, 29, 29, 0,    # Right border
-      8, 8, 0, 12, 12, 0,     # Central square obstacle
-      5, 18, 0, 15, 20, 0,    # Upper horizontal bar
-      18, 5, 0, 20, 15, 0,    # Right vertical bar
-      20, 20, 0, 25, 25, 0    # Corner obstacle
+      30, 30, 0, 70, 70, 15,   # Large central building complex
+      10, 10, 0, 25, 25, 8,    # Smaller building - bottom left
+      75, 10, 0, 90, 25, 8,    # Smaller building - bottom right
+      10, 75, 0, 25, 90, 8,    # Smaller building - top left
+      75, 75, 0, 90, 90, 8,    # Smaller building - top right
+      45, 15, 0, 55, 25, 19,   # Vertical obstacle (tower) - bottom
+      45, 75, 0, 55, 85, 19    # Vertical obstacle (tower) - top
     ]
     
     # Agent positions - Flattened array format
     # Each agent position: [x, y, z]
     agent_positions: [
-      3, 3, 0,      # Agent 1
-      26, 3, 0,     # Agent 2
-      3, 26, 0,     # Agent 3
-      26, 26, 0,    # Agent 4
-      15, 15, 0     # Agent 5
+      5, 5, 0,       # Agent 1
+      95, 5, 0,      # Agent 2
+      5, 95, 0,      # Agent 3
+      95, 95, 0,     # Agent 4
+      50, 5, 10,     # Agent 5 (elevated)
+      50, 95, 10,    # Agent 6 (elevated)
+      25, 50, 5,     # Agent 7 (mid-level)
+      75, 50, 5      # Agent 8 (mid-level)
     ]
     
     # Visualization settings
     visualization:
       # Node visualization
-      node_scale: 0.25         # Large points for small world visibility
-      node_color: [0.0, 1.0, 0.0, 0.7]  # Bright green, visible
+      node_scale: 0.05         # Smaller points for large world
+      node_color: [0.0, 1.0, 0.0, 0.3]  # More transparent for performance
       
       # Edge visualization  
-      edge_width: 0.1          # Thick lines for clear visibility
-      edge_color: [0.0, 0.0, 1.0, 0.6]  # Blue, semi-transparent
+      edge_width: 0.02         # Thinner lines for large world
+      edge_color: [0.0, 0.0, 1.0, 0.2]  # More transparent
       
       # Obstacle visualization
-      obstacle_scale: 0.95     # Slightly smaller for visual clarity
-      obstacle_color: [1.0, 0.0, 0.0, 0.9]  # Bright red, mostly opaque
+      obstacle_scale: 0.95     # Nearly full scale
+      obstacle_color: [1.0, 0.0, 0.0, 0.8]  # Red, mostly opaque
       
       # Agent visualization
-      agent_scale: 0.8         # Standard size
-      agent_color: [1.0, 0.0, 1.0, 1.0]   # Magenta for 2D contrast
+      agent_scale: 1.2         # Larger agents to be visible in large world
+      agent_color: [0.0, 0.0, 1.0, 1.0]   # Blue, fully opaque
     
     # Frame settings
     frame_id: "map"
