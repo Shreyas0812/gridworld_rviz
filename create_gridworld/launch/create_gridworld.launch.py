@@ -15,7 +15,7 @@ def generate_launch_description():
 
     config_type_arg = DeclareLaunchArgument(
         "config_type",
-        default_value="small_3D",
+        default_value="small_2D",
         description="Configuration type: small_2D, small_3D, large_2D, large_3D"
     )
 
@@ -26,10 +26,11 @@ def generate_launch_description():
         ])
 
     return LaunchDescription([
+
+        config_type_arg,
         
         LogInfo(msg=['Loading parameters from: ', gridworld_params]),
 
-        config_type_arg,
 
         SetEnvironmentVariable('QT_QPA_PLATFORM', 'xcb'),
         SetEnvironmentVariable('QT_QPA_PLATFORM_PLUGIN_PATH', ''),
