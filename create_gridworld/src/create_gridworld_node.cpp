@@ -3,6 +3,7 @@
 #include "geometry_msgs/msg/point_stamped.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
+#include "std_msgs/msg/int64_multi_array.hpp"
 # include <chrono>
 # include <memory>
 
@@ -63,9 +64,9 @@ public:
         }
 
         auto flat_agents = this->get_parameter("agent_positions").as_integer_array();
-        agent_start_positions_.clear();
+        agent_positions_.clear();
         for (size_t i = 0; i < flat_agents.size(); i += 3) {
-            agent_start_positions_.emplace_back(std::vector<int64_t>{
+            agent_positions_.emplace_back(std::vector<int64_t>{
                 flat_agents[i], flat_agents[i + 1], flat_agents[i + 2]
             });
         }
@@ -88,13 +89,20 @@ public:
 
         
         RCLCPP_INFO(this->get_logger(), "Loaded %zu obstacle regions and %zu agent start positions", 
-        obstacle_regions_.size(), agent_start_positions_.size());
+        obstacle_regions_.size(), agent_positions_.size());
         
         // Publisher for the occupancy grid
         grid_nodes_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.nodes, 10);
         grid_edges_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.edges, 10);
         obstacles_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.obstacles, 10);
         agent_markers_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.agents, 10);
+
+        // Subscriber for agent positions
+        agent_position_sub_ = this->create_subscription<std_msgs::msg::Int64MultiArray>(
+            "agent_position", 
+            10,
+            std::bind(&CreateGridWorldNode::agent_position_callback, this, std::placeholders::_1)
+        );
 
         // Timer to publish the grid at regular intervals
         int timer_period_ms = static_cast<int>(1000.0 / publish_rate_);
@@ -125,7 +133,7 @@ public:
         }
 
         RCLCPP_INFO(this->get_logger(), "Agent start positions:");
-        for (const auto & pos : agent_start_positions_) {
+        for (const auto & pos : agent_positions_) {
             std::ostringstream oss;
             oss << "[";
             for (size_t i = 0; i < pos.size(); ++i) {
@@ -402,7 +410,7 @@ private:
         visualization_msgs::msg::MarkerArray marker_array;
 
         std::vector<std::tuple<int, int, int>> agent_pos;
-        for (const auto & pos : agent_start_positions_)
+        for (const auto & pos : agent_positions_)
         {
             if (pos.size() < 3) continue;
             agent_pos.emplace_back(pos[0], pos[1], pos[2]);
@@ -459,6 +467,54 @@ private:
         agent_markers_pub_->publish(marker_array);
     }
 
+    void agent_position_callback(const std_msgs::msg::Int64MultiArray::SharedPtr msg)
+    {
+
+        if (msg->data.size() != 4)
+        {
+            RCLCPP_WARN(this->get_logger(), "Received invalid agent positions array size: %zu, expected: 4 [agent_index, x, y, z])", msg->data.size());
+            return;
+        }
+
+        int agent_index = msg->data[0];
+        int64_t x = msg->data[1];
+        int64_t y = msg->data[2];
+        int64_t z = msg->data[3];
+
+        if (x < 0 || x >= grid_width_ || y < 0 || y >= grid_height_ || z < 0 || z >= grid_depth_)
+        {
+            RCLCPP_WARN(this->get_logger(), "Received out-of-bounds agent position: [%ld, %ld, %ld]", x, y, z);
+            return;
+        }
+
+        // Initialize new agent position if it doesn't exist
+        if (agent_positions_[agent_index].empty())
+        {
+            agent_positions_[agent_index] = std::vector<int64_t>(3, 0);
+            RCLCPP_INFO(this->get_logger(), "Initialized new agent %ld", agent_index);
+        }
+
+        // Update agent position
+        agent_positions_[agent_index][0] = x;
+        agent_positions_[agent_index][1] = y;
+        agent_positions_[agent_index][2] = z;
+
+        RCLCPP_DEBUG(this->get_logger(), "Updated agent %ld to position (%ld, %ld, %ld)", 
+                    agent_index, x, y, z);
+    }
+
+    void update_agent_position(int agent_index, int new_x, int new_y, int new_z)
+    {
+        if (agent_index < 0 || agent_index >= static_cast<int>(agent_positions_.size()))
+        {
+            RCLCPP_WARN(this->get_logger(), "Invalid agent index %d", agent_index);
+            return;
+        }
+        agent_positions_[agent_index][0] = new_x;
+        agent_positions_[agent_index][1] = new_y;
+        agent_positions_[agent_index][2] = new_z;
+    }
+
     // Grid
     int grid_width_;
     int grid_height_;
@@ -468,7 +524,7 @@ private:
     double publish_rate_;
     std::string frame_id_;
     std::vector<std::vector<int64_t>> obstacle_regions_;
-    std::vector<std::vector<int64_t>> agent_start_positions_;
+    std::vector<std::vector<int64_t>> agent_positions_;
 
     // Visualization parameters
     struct VisualizationConfig {
@@ -499,6 +555,9 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr agent_markers_pub_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr obstacles_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
+
+    // ROS2 subscribers
+    rclcpp::Subscription<std_msgs::msg::Int64MultiArray>::SharedPtr agent_position_sub_;
 };
 int main(int argc, char **argv)
 {
