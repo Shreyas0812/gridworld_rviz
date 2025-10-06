@@ -1,0 +1,57 @@
+# Small 3D Gridworld Configuration Parameters
+create_gridworld_node:
+  ros__parameters:
+    # Grid dimensions - Small 3D world
+    grid_width: 20
+    grid_height: 20  
+    grid_depth: 5
+    
+    # Grid resolution (meters per cell)
+    grid_resolution: 1.0
+    
+    # Publishing rate (Hz)
+    publish_rate: 15.0  # Higher rate for small world
+    
+    # Obstacle configuration - Flattened array format
+    # Each obstacle region: [start_x, start_y, start_z, end_x, end_y, end_z]
+    obstacle_regions: [
+      8, 8, 0, 12, 12, 4,    # Central obstacle block
+      2, 2, 0, 4, 4, 2,      # Corner obstacle 1
+      16, 16, 0, 18, 18, 2   # Corner obstacle 2
+    ]
+    
+    # Agent positions - Flattened array format
+    # Each agent position: [x, y, z]
+    agent_positions: [
+      1, 1, 0,     # Agent 1
+      18, 18, 0,   # Agent 2
+      10, 1, 2     # Agent 3
+    ]
+    
+    # Visualization settings
+    visualization:
+      # Node visualization
+      node_scale: 0.2          # Larger points for small world visibility
+      node_color: [0.0, 1.0, 0.0, 0.6]  # Green, semi-transparent
+      
+      # Edge visualization  
+      edge_width: 0.08         # Thicker lines for visibility
+      edge_color: [0.0, 0.0, 1.0, 0.5]  # Blue, semi-transparent
+      
+      # Obstacle visualization
+      obstacle_scale: 0.9      # Slightly smaller for visual separation
+      obstacle_color: [1.0, 0.0, 0.0, 0.8]  # Red, mostly opaque
+      
+      # Agent visualization
+      agent_scale: 0.8         # Standard size for small world
+      agent_color: [0.0, 0.0, 1.0, 1.0]   # Blue, fully opaque
+    
+    # Frame settings
+    frame_id: "map"
+    
+    # Topic names
+    topics:
+      nodes: "gridworld/nodes"
+      edges: "gridworld/edges" 
+      obstacles: "gridworld/obstacles"
+      agents: "gridworld/agents"

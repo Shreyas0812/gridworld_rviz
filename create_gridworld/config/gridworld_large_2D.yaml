@@ -1,0 +1,73 @@
+# Large 2D Gridworld Configuration Parameters
+create_gridworld_node:
+  ros__parameters:
+    # Grid dimensions - Large 2D world (flat)
+    grid_width: 150
+    grid_height: 150  
+    grid_depth: 1    # Only one layer for 2D
+    
+    # Grid resolution (meters per cell)
+    grid_resolution: 1.0
+    
+    # Publishing rate (Hz)
+    publish_rate: 3.0  # Lower rate for very large 2D world
+    
+    # Obstacle configuration - Flattened array format
+    # Each obstacle region: [start_x, start_y, start_z, end_x, end_y, end_z]
+    obstacle_regions: [
+      0, 0, 0, 149, 5, 0,      # Bottom wall
+      0, 145, 0, 149, 149, 0,  # Top wall  
+      0, 0, 0, 5, 149, 0,      # Left wall
+      145, 0, 0, 149, 149, 0,  # Right wall
+      20, 20, 0, 130, 25, 0,   # Long horizontal wall
+      20, 50, 0, 50, 100, 0,   # Vertical wall section
+      80, 30, 0, 130, 35, 0,   # Another horizontal section
+      60, 60, 0, 90, 120, 0,   # Central vertical barrier
+      100, 80, 0, 130, 85, 0,  # Upper horizontal barrier
+      30, 80, 0, 40, 90, 0,    # Scattered obstacle 1
+      70, 100, 0, 80, 110, 0,  # Scattered obstacle 2
+      110, 40, 0, 120, 50, 0   # Scattered obstacle 3
+    ]
+    
+    # Agent positions - Flattened array format
+    # Each agent position: [x, y, z]
+    agent_positions: [
+      10, 10, 0,     # Agent 1
+      140, 10, 0,    # Agent 2
+      10, 140, 0,    # Agent 3
+      140, 140, 0,   # Agent 4
+      75, 10, 0,     # Agent 5
+      75, 140, 0,    # Agent 6
+      30, 75, 0,     # Agent 7
+      120, 75, 0,    # Agent 8
+      75, 40, 0,     # Agent 9
+      75, 110, 0     # Agent 10
+    ]
+    
+    # Visualization settings
+    visualization:
+      # Node visualization
+      node_scale: 0.03         # Very small points for large 2D world
+      node_color: [0.0, 1.0, 0.0, 0.2]  # Very transparent for performance
+      
+      # Edge visualization  
+      edge_width: 0.01         # Very thin lines
+      edge_color: [0.0, 0.0, 1.0, 0.15]  # Very transparent
+      
+      # Obstacle visualization
+      obstacle_scale: 0.98     # Nearly full scale for walls
+      obstacle_color: [0.8, 0.2, 0.2, 0.9]  # Dark red, mostly opaque
+      
+      # Agent visualization
+      agent_scale: 1.5         # Larger agents to be visible in large world
+      agent_color: [0.0, 1.0, 1.0, 1.0]   # Cyan for 2D visibility
+    
+    # Frame settings
+    frame_id: "map"
+    
+    # Topic names
+    topics:
+      nodes: "gridworld/nodes"
+      edges: "gridworld/edges" 
+      obstacles: "gridworld/obstacles"
+      agents: "gridworld/agents"

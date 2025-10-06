@@ -1,0 +1,64 @@
+# Small 2D Gridworld Configuration Parameters
+create_gridworld_node:
+  ros__parameters:
+    # Grid dimensions - Small 2D world (flat)
+    grid_width: 30
+    grid_height: 30  
+    grid_depth: 1    # Only one layer for 2D
+    
+    # Grid resolution (meters per cell)
+    grid_resolution: 1.0
+    
+    # Publishing rate (Hz)
+    publish_rate: 20.0  # High rate for small, responsive world
+    
+    # Obstacle configuration - Flattened array format
+    # Each obstacle region: [start_x, start_y, start_z, end_x, end_y, end_z]
+    obstacle_regions: [
+      0, 0, 0, 29, 2, 0,      # Bottom border
+      0, 28, 0, 29, 29, 0,    # Top border
+      0, 0, 0, 2, 29, 0,      # Left border  
+      28, 0, 0, 29, 29, 0,    # Right border
+      8, 8, 0, 12, 12, 0,     # Central square obstacle
+      5, 18, 0, 15, 20, 0,    # Upper horizontal bar
+      18, 5, 0, 20, 15, 0,    # Right vertical bar
+      20, 20, 0, 25, 25, 0    # Corner obstacle
+    ]
+    
+    # Agent positions - Flattened array format
+    # Each agent position: [x, y, z]
+    agent_positions: [
+      3, 3, 0,      # Agent 1
+      26, 3, 0,     # Agent 2
+      3, 26, 0,     # Agent 3
+      26, 26, 0,    # Agent 4
+      15, 15, 0     # Agent 5
+    ]
+    
+    # Visualization settings
+    visualization:
+      # Node visualization
+      node_scale: 0.25         # Large points for small world visibility
+      node_color: [0.0, 1.0, 0.0, 0.7]  # Bright green, visible
+      
+      # Edge visualization  
+      edge_width: 0.1          # Thick lines for clear visibility
+      edge_color: [0.0, 0.0, 1.0, 0.6]  # Blue, semi-transparent
+      
+      # Obstacle visualization
+      obstacle_scale: 0.95     # Slightly smaller for visual clarity
+      obstacle_color: [1.0, 0.0, 0.0, 0.9]  # Bright red, mostly opaque
+      
+      # Agent visualization
+      agent_scale: 0.8         # Standard size
+      agent_color: [1.0, 0.0, 1.0, 1.0]   # Magenta for 2D contrast
+    
+    # Frame settings
+    frame_id: "map"
+    
+    # Topic names
+    topics:
+      nodes: "gridworld/nodes"
+      edges: "gridworld/edges" 
+      obstacles: "gridworld/obstacles"
+      agents: "gridworld/agents"
