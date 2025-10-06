@@ -65,7 +65,7 @@ ros2 launch create_gridworld create_gridworld.launch.py config_type:=large_3D
 - **Configurable**: Size, color, regions
 
 ### 🔵 **Agents**
-- **Blue spheres** (3D) or **Magenta circles** (2D) showing agent positions
+- **Magenta circles** (2D) showing agent positions
 - **Configurable**: Size, color, initial positions
 
 
