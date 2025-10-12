@@ -4,7 +4,7 @@ A configurable 2D/3D grid environment for multi-agent path finding (MAPF) resear
 
 ## Overview
 
-This package creates dynamic grid worlds with configurable dimensions, obstacles, and agents.
+This package creates dynamic grid worlds with configurable dimensions, obstacles, agents, and station infrastructure for warehouse automation research.
 
 ## Quick Start
 
@@ -13,7 +13,6 @@ This package creates dynamic grid worlds with configurable dimensions, obstacles
 - ROS2 Humble or later
 - RViz2
 - C++17 compiler
-
 
 ### Installation
 
@@ -52,12 +51,12 @@ ros2 launch create_gridworld create_gridworld.launch.py config_type:=large_3D
 
 ## Configuration Options
 
-| Configuration | Dimensions | Agents | Obstacles | Use Case | Publish Rate |
-|---------------|------------|---------|-----------|----------|--------------|
-| `small_2D` | 30×30×1 | 5 | Borders + 4 internal | 2D algorithm testing | 20 Hz |
-| `small_3D` | 20×20×5 | 3 | 3 block regions | 3D algorithm testing | 15 Hz |
-| `large_2D` | 150×150×1 | 10 | Complex maze structure | Large-scale 2D navigation | 3 Hz |
-| `large_3D` | 100×100×20 | 8 | Multi-level buildings | Large-scale 3D navigation | 5 Hz |
+| Configuration | Dimensions | Agents | Obstacles | Induct Stations | Eject Stations | Use Case | Publish Rate |
+|---------------|------------|---------|-----------|-----------------|----------------|----------|--------------|
+| `small_2D` | 30×30×1 | 5 | Borders + 4 internal | 4 | 4 | 2D algorithm testing | 20 Hz |
+| `small_3D` | 20×20×5 | 3 | 3 block regions | 4 | 4 | 3D algorithm testing | 15 Hz |
+| `large_2D` | 150×150×1 | 10 | Complex maze structure | 8 | 8 | Large-scale 2D navigation | 3 Hz |
+| `large_3D` | 100×100×20 | 8 | Multi-level buildings | 10 | 10 | Large-scale 3D navigation | 5 Hz |
 
 ## Visualization Elements
 
@@ -78,6 +77,16 @@ ros2 launch create_gridworld create_gridworld.launch.py config_type:=large_3D
 - **White text labels** displaying "A_0", "A_1", etc. above each agent
 - **Configurable**: Size, color, initial positions
 
+### **Induct Stations**
+- **Light blue cylinders** marking entry/pickup points
+- **White text labels** displaying "IN_1", "IN_2", etc.
+- **Configurable**: Size, color, positions
+
+### **Eject Stations**
+- **Orange cylinders** marking exit/dropoff points
+- **White text labels** displaying "OUT_1", "OUT_2", etc.
+- **Configurable**: Size, color, positions
+
 ## Topics Published
 
 | Topic | Message Type | Description |
@@ -86,6 +95,8 @@ ros2 launch create_gridworld create_gridworld.launch.py config_type:=large_3D
 | `/gridworld/edges` | `visualization_msgs/MarkerArray` | Connectivity visualization |
 | `/gridworld/obstacles` | `visualization_msgs/MarkerArray` | Obstacle visualization |
 | `/gridworld/agents` | `visualization_msgs/MarkerArray` | Agent position visualization |
+| `/gridworld/induct_stations` | `visualization_msgs/MarkerArray` | Induct station visualization |
+| `/gridworld/eject_stations` | `visualization_msgs/MarkerArray` | Eject station visualization |
 
 ### Subscribed Topics
 | Topic | Message Type | Description |
@@ -132,10 +143,20 @@ ros2 topic pub /agent_position std_msgs/msg/Int64MultiArray "{data: [3, 7, 12, 0
        # Agent positions: [x, y, z, x, y, z, ...]
        agent_positions: [5, 5, 0, 45, 45, 0, 25, 25, 5]
        
+       # Induct stations: [x, y, z, station_id, ...]
+       induct_stations: [2, 2, 0, 1, 48, 48, 0, 2]
+       
+       # Eject stations: [x, y, z, station_id, ...]
+       eject_stations: [2, 48, 0, 1, 48, 2, 0, 2]
+       
        # Visualization settings
        visualization:
          node_scale: 0.15
          node_color: [0.0, 1.0, 0.0, 0.7]  # [R, G, B, Alpha]
+         induct_station_scale: 1.0
+         induct_station_color: [0.0, 0.5, 1.0, 1.0]
+         eject_station_scale: 1.0
+         eject_station_color: [1.0, 0.5, 0.0, 1.0]
    ```
 
 3. **Launch with your configuration**:
@@ -150,6 +171,8 @@ ros2 topic pub /agent_position std_msgs/msg/Int64MultiArray "{data: [3, 7, 12, 0
 - **`publish_rate`**: Update frequency in Hz
 - **`obstacle_regions`**: Flattened array of obstacle boxes `[x1,y1,z1,x2,y2,z2,...]`
 - **`agent_positions`**: Flattened array of agent positions `[x1,y1,z1,x2,y2,z2,...]`
+- **`induct_stations`**: Flattened array of entry stations `[x1,y1,z1,id1,x2,y2,z2,id2,...]`
+- **`eject_stations`**: Flattened array of exit stations `[x1,y1,z1,id1,x2,y2,z2,id2,...]`
 - **`visualization.*`**: Color (RGBA), scale, and size parameters
 
 ## Package Structure
@@ -175,5 +198,3 @@ create_gridworld/
 ## License
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](create_gridworld/LICENSE)
-
-
