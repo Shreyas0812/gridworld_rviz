@@ -36,6 +36,34 @@ create_gridworld_node:
       25, 50, 5,     # Agent 7 (mid-level)
       75, 50, 5      # Agent 8 (mid-level)
     ]
+
+    induct_stations: [
+      5, 15, 0, 1,        # Induct station 1 - bottom left, ground level
+      95, 15, 0, 2,       # Induct station 2 - bottom right, ground level
+      5, 85, 0, 3,        # Induct station 3 - top left, ground level
+      95, 85, 0, 4,       # Induct station 4 - top right, ground level
+      25, 5, 5, 5,        # Induct station 5 - bottom, mid-level
+      75, 5, 5, 6,        # Induct station 6 - bottom, mid-level
+      25, 95, 10, 7,      # Induct station 7 - top, high level
+      75, 95, 10, 8,      # Induct station 8 - top, high level
+      50, 50, 16, 9,      # Induct station 9 - center, very high level
+      15, 50, 2, 10       # Induct station 10 - left center, low-mid level
+    ]
+    
+    # Eject (exit) stations - Flattened array format
+    # Each station: [x, y, z, station_id]
+    eject_stations: [
+      15, 5, 0, 1,        # Eject station 1 - bottom area, ground level
+      85, 5, 0, 2,        # Eject station 2 - bottom area, ground level
+      15, 95, 0, 3,       # Eject station 3 - top area, ground level
+      85, 95, 0, 4,       # Eject station 4 - top area, ground level
+      5, 50, 8, 5,        # Eject station 5 - left center, high level
+      95, 50, 8, 6,       # Eject station 6 - right center, high level
+      50, 15, 12, 7,      # Eject station 7 - bottom center, very high
+      50, 85, 12, 8,      # Eject station 8 - top center, very high
+      25, 25, 15, 9,      # Eject station 9 - lower left, very high
+      75, 75, 15, 10      # Eject station 10 - upper right, very high
+    ]
     
     # Visualization settings
     visualization:
@@ -54,6 +82,14 @@ create_gridworld_node:
       # Agent visualization
       agent_scale: 0.8         # Larger agents to be visible in large world
       agent_color: [1.0, 0.0, 1.0, 1.0]   # Magenta for 3D contrast
+
+      # Induct station visualization
+      induct_station_scale: 1.2    # Larger for visibility in big 3D world
+      induct_station_color: [0.0, 0.5, 1.0, 1.0]  # Light blue, fully opaque
+      
+      # Eject station visualization
+      eject_station_scale: 1.2     # Larger for visibility in big 3D world
+      eject_station_color: [1.0, 0.5, 0.0, 1.0]   # Orange, fully opaque
     
     # Frame settings
     frame_id: "map"
@@ -64,3 +100,5 @@ create_gridworld_node:
       edges: "gridworld/edges" 
       obstacles: "gridworld/obstacles"
       agents: "gridworld/agents"
+      induct_stations: "gridworld/induct_stations"
+      eject_stations: "gridworld/eject_stations"

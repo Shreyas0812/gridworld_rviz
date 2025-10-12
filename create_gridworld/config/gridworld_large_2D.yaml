@@ -43,6 +43,32 @@ create_gridworld_node:
       75, 40, 0,     # Agent 9
       75, 110, 0     # Agent 10
     ]
+
+    # Induct (entry) stations - Flattened array format
+    # Each station: [x, y, z, station_id]
+    induct_stations: [
+      15, 15, 0, 1,       # Induct station 1 - bottom left area
+      135, 15, 0, 2,      # Induct station 2 - bottom right area
+      15, 135, 0, 3,      # Induct station 3 - top left area
+      135, 135, 0, 4,     # Induct station 4 - top right area
+      75, 15, 0, 5,       # Induct station 5 - bottom center
+      75, 135, 0, 6,      # Induct station 6 - top center
+      15, 75, 0, 7,       # Induct station 7 - left center
+      135, 75, 0, 8       # Induct station 8 - right center
+    ]
+    
+    # Eject (exit) stations - Flattened array format
+    # Each station: [x, y, z, station_id]
+    eject_stations: [
+      25, 30, 0, 1,       # Eject station 1 - left side
+      125, 30, 0, 2,      # Eject station 2 - right side
+      25, 120, 0, 3,      # Eject station 3 - upper left
+      125, 120, 0, 4,     # Eject station 4 - upper right
+      50, 45, 0, 5,       # Eject station 5 - central area
+      100, 45, 0, 6,      # Eject station 6 - central area
+      40, 70, 0, 7,       # Eject station 7 - left-center
+      95, 120, 0, 8       # Eject station 8 - upper area
+    ]
     
     # Visualization settings
     visualization:
@@ -61,6 +87,14 @@ create_gridworld_node:
       # Agent visualization
       agent_scale: 1.0         # Larger agents to be visible in large world
       agent_color: [0.0, 1.0, 1.0, 1.0]   # Cyan for 2D visibility
+
+      # Induct station visualization
+      induct_station_scale: 1.5    # Larger for visibility in big world
+      induct_station_color: [0.0, 0.5, 1.0, 1.0]  # Light blue, fully opaque
+      
+      # Eject station visualization
+      eject_station_scale: 1.5     # Larger for visibility in big world
+      eject_station_color: [1.0, 0.5, 0.0, 1.0]   # Orange, fully opaque
     
     # Frame settings
     frame_id: "map"
@@ -71,3 +105,5 @@ create_gridworld_node:
       edges: "gridworld/edges" 
       obstacles: "gridworld/obstacles"
       agents: "gridworld/agents"
+      induct_stations: "gridworld/induct_stations"
+      eject_stations: "gridworld/eject_stations"
