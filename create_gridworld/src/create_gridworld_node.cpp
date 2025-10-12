@@ -4,8 +4,8 @@
 #include "std_msgs/msg/header.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "std_msgs/msg/int64_multi_array.hpp"
-# include <chrono>
-# include <memory>
+#include <chrono>
+#include <memory>
 
 class CreateGridWorldNode : public rclcpp::Node
 {
@@ -32,6 +32,10 @@ public:
         // Agent positions as a list of lists: [[x1, y1, z1], [x2, y2, z2], ...]
         this->declare_parameter("agent_positions", std::vector<int64_t>{});
 
+        // Station parameters: [x, y, z, station_id, x, y, z, station_id, ...]
+        this->declare_parameter("induct_stations", std::vector<int64_t>{});
+        this->declare_parameter("eject_stations", std::vector<int64_t>{});
+
         // Declare visualization parameters
         this->declare_parameter("visualization.node_scale", 0.1);
         this->declare_parameter("visualization.node_color", std::vector<double>{0.0, 1.0, 0.0, 0.5});
@@ -41,12 +45,18 @@ public:
         this->declare_parameter("visualization.obstacle_color", std::vector<double>{1.0, 0.0, 0.0, 0.8});
         this->declare_parameter("visualization.agent_scale", 0.8);
         this->declare_parameter("visualization.agent_color", std::vector<double>{0.0, 0.0, 1.0, 1.0});
+        this->declare_parameter("visualization.induct_station_scale", 1.2);
+        this->declare_parameter("visualization.induct_station_color", std::vector<double>{0.0, 0.5, 1.0, 1.0});
+        this->declare_parameter("visualization.eject_station_scale", 1.2);
+        this->declare_parameter("visualization.eject_station_color", std::vector<double>{1.0, 0.5, 0.0, 1.0});
 
         // Declare topic parameters
         this->declare_parameter("topics.nodes", std::string("gridworld/nodes"));
         this->declare_parameter("topics.edges", std::string("gridworld/edges"));
         this->declare_parameter("topics.obstacles", std::string("gridworld/obstacles"));
         this->declare_parameter("topics.agents", std::string("gridworld/agents"));
+        this->declare_parameter("topics.induct_stations", std::string("gridworld/induct_stations"));
+        this->declare_parameter("topics.eject_stations", std::string("gridworld/eject_stations"));
 
         grid_width_ = this->get_parameter("grid_width").as_int();
         grid_height_ = this->get_parameter("grid_height").as_int();
@@ -71,6 +81,24 @@ public:
             });
         }
 
+        // Retrieve induct stations: [x, y, z, station_id, ...]
+        auto flat_induct = this->get_parameter("induct_stations").as_integer_array();
+        induct_stations_.clear();
+        for (size_t i = 0; i < flat_induct.size(); i += 4) {
+            induct_stations_.emplace_back(std::vector<int64_t>{
+                flat_induct[i], flat_induct[i + 1], flat_induct[i + 2], flat_induct[i + 3]
+            });
+        }
+
+        // Retrieve eject stations: [x, y, z, station_id, ...]
+        auto flat_eject = this->get_parameter("eject_stations").as_integer_array();
+        eject_stations_.clear();
+        for (size_t i = 0; i < flat_eject.size(); i += 4) {
+            eject_stations_.emplace_back(std::vector<int64_t>{
+                flat_eject[i], flat_eject[i + 1], flat_eject[i + 2], flat_eject[i + 3]
+            });
+        }
+
         // Get visualization parameters
         viz_config_.node_scale = this->get_parameter("visualization.node_scale").as_double();
         viz_config_.node_color = this->get_parameter("visualization.node_color").as_double_array();
@@ -80,22 +108,30 @@ public:
         viz_config_.obstacle_color = this->get_parameter("visualization.obstacle_color").as_double_array();
         viz_config_.agent_scale = this->get_parameter("visualization.agent_scale").as_double();
         viz_config_.agent_color = this->get_parameter("visualization.agent_color").as_double_array();
+        viz_config_.induct_station_scale = this->get_parameter("visualization.induct_station_scale").as_double();
+        viz_config_.induct_station_color = this->get_parameter("visualization.induct_station_color").as_double_array();
+        viz_config_.eject_station_scale = this->get_parameter("visualization.eject_station_scale").as_double();
+        viz_config_.eject_station_color = this->get_parameter("visualization.eject_station_color").as_double_array();
         
         // Get topic names
         topic_name_.nodes = this->get_parameter("topics.nodes").as_string();
         topic_name_.edges = this->get_parameter("topics.edges").as_string();
         topic_name_.obstacles = this->get_parameter("topics.obstacles").as_string();
         topic_name_.agents = this->get_parameter("topics.agents").as_string();
+        topic_name_.induct_stations = this->get_parameter("topics.induct_stations").as_string();
+        topic_name_.eject_stations = this->get_parameter("topics.eject_stations").as_string();
 
         
-        RCLCPP_INFO(this->get_logger(), "Loaded %zu obstacle regions and %zu agent start positions", 
-        obstacle_regions_.size(), agent_positions_.size());
+        RCLCPP_INFO(this->get_logger(), "Loaded %zu obstacle regions, %zu agent start positions, %zu induct stations, %zu eject stations", 
+            obstacle_regions_.size(), agent_positions_.size(), induct_stations_.size(), eject_stations_.size());
         
-        // Publisher for the occupancy grid
+        // Publishers
         grid_nodes_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.nodes, 10);
         grid_edges_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.edges, 10);
         obstacles_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.obstacles, 10);
         agent_markers_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.agents, 10);
+        induct_stations_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.induct_stations, 10);
+        eject_stations_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(topic_name_.eject_stations, 10);
 
         // Subscriber for agent positions
         agent_position_sub_ = this->create_subscription<std_msgs::msg::Int64MultiArray>(
@@ -144,6 +180,18 @@ public:
             RCLCPP_INFO(this->get_logger(), "%s", oss.str().c_str());
         }
 
+        RCLCPP_INFO(this->get_logger(), "Induct stations:");
+        for (const auto & station : induct_stations_) {
+            RCLCPP_INFO(this->get_logger(), "  [%ld, %ld, %ld] ID: %ld", 
+                station[0], station[1], station[2], station[3]);
+        }
+
+        RCLCPP_INFO(this->get_logger(), "Eject stations:");
+        for (const auto & station : eject_stations_) {
+            RCLCPP_INFO(this->get_logger(), "  [%ld, %ld, %ld] ID: %ld", 
+                station[0], station[1], station[2], station[3]);
+        }
+
         RCLCPP_INFO(this->get_logger(), "Visualization config:");
         RCLCPP_INFO(this->get_logger(), "  node_scale: %.2f", viz_config_.node_scale);
         RCLCPP_INFO(this->get_logger(), "  node_color: [%.2f, %.2f, %.2f, %.2f]", 
@@ -157,13 +205,20 @@ public:
         RCLCPP_INFO(this->get_logger(), "  agent_scale: %.2f", viz_config_.agent_scale);
         RCLCPP_INFO(this->get_logger(), "  agent_color: [%.2f, %.2f, %.2f, %.2f]", 
             viz_config_.agent_color[0], viz_config_.agent_color[1], viz_config_.agent_color[2], viz_config_.agent_color[3]);
+        RCLCPP_INFO(this->get_logger(), "  induct_station_scale: %.2f", viz_config_.induct_station_scale);
+        RCLCPP_INFO(this->get_logger(), "  induct_station_color: [%.2f, %.2f, %.2f, %.2f]", 
+            viz_config_.induct_station_color[0], viz_config_.induct_station_color[1], viz_config_.induct_station_color[2], viz_config_.induct_station_color[3]);
+        RCLCPP_INFO(this->get_logger(), "  eject_station_scale: %.2f", viz_config_.eject_station_scale);
+        RCLCPP_INFO(this->get_logger(), "  eject_station_color: [%.2f, %.2f, %.2f, %.2f]", 
+            viz_config_.eject_station_color[0], viz_config_.eject_station_color[1], viz_config_.eject_station_color[2], viz_config_.eject_station_color[3]);
 
         RCLCPP_INFO(this->get_logger(), "Topic names:");
         RCLCPP_INFO(this->get_logger(), "  nodes: %s", topic_name_.nodes.c_str());
         RCLCPP_INFO(this->get_logger(), "  edges: %s", topic_name_.edges.c_str());
         RCLCPP_INFO(this->get_logger(), "  obstacles: %s", topic_name_.obstacles.c_str());
         RCLCPP_INFO(this->get_logger(), "  agents: %s", topic_name_.agents.c_str());
-
+        RCLCPP_INFO(this->get_logger(), "  induct_stations: %s", topic_name_.induct_stations.c_str());
+        RCLCPP_INFO(this->get_logger(), "  eject_stations: %s", topic_name_.eject_stations.c_str());
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -172,6 +227,7 @@ public:
         RCLCPP_INFO(this->get_logger(), "CreateGridWorldNode started with %dx%dx%d grid, resolution %.2f", 
                     grid_width_, grid_height_, grid_depth_, grid_resolution_);
     }
+
 private:
     struct GridNode
     {
@@ -202,9 +258,7 @@ private:
         }
 
         add_obstacles();
-
         compute_neighbors();
-
     }
 
     void add_obstacles()
@@ -282,6 +336,8 @@ private:
         publish_grid_edges(timestamp);
         publish_obstacles(timestamp);
         publish_agent_markers(timestamp);
+        publish_induct_stations(timestamp);
+        publish_eject_stations(timestamp);
     }
 
     void publish_grid_nodes(const rclcpp::Time & timestamp)
@@ -467,9 +523,134 @@ private:
         agent_markers_pub_->publish(marker_array);
     }
 
+    void publish_induct_stations(const rclcpp::Time & timestamp)
+    {
+        visualization_msgs::msg::MarkerArray marker_array;
+
+        int marker_id = 0;
+        for (const auto & station : induct_stations_)
+        {
+            if (station.size() < 4) continue;
+
+            int64_t x = station[0];
+            int64_t y = station[1];
+            int64_t z = station[2];
+            int64_t station_id = station[3];
+
+            // Create station marker (cylinder)
+            visualization_msgs::msg::Marker marker;
+            marker.header.frame_id = frame_id_;
+            marker.header.stamp = timestamp;
+            marker.ns = "induct_stations";
+            marker.id = marker_id;
+            marker.type = visualization_msgs::msg::Marker::CYLINDER;
+            marker.action = visualization_msgs::msg::Marker::ADD;
+            marker.pose.position.x = x * grid_resolution_;
+            marker.pose.position.y = y * grid_resolution_;
+            marker.pose.position.z = z * grid_resolution_;
+            marker.pose.orientation.w = 1.0;
+            marker.scale.x = grid_resolution_ * viz_config_.induct_station_scale;
+            marker.scale.y = grid_resolution_ * viz_config_.induct_station_scale;
+            marker.scale.z = grid_resolution_ * viz_config_.induct_station_scale * 0.3;
+            marker.color.r = viz_config_.induct_station_color[0];
+            marker.color.g = viz_config_.induct_station_color[1];
+            marker.color.b = viz_config_.induct_station_color[2];
+            marker.color.a = viz_config_.induct_station_color[3];
+
+            marker_array.markers.push_back(marker);
+
+            // Create label marker
+            visualization_msgs::msg::Marker text_marker;
+            text_marker.header.frame_id = frame_id_;
+            text_marker.header.stamp = timestamp;
+            text_marker.ns = "induct_station_labels";
+            text_marker.id = marker_id;
+            text_marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+            text_marker.action = visualization_msgs::msg::Marker::ADD;
+            text_marker.pose.position.x = x * grid_resolution_;
+            text_marker.pose.position.y = y * grid_resolution_;
+            text_marker.pose.position.z = z * grid_resolution_ + (grid_resolution_ * viz_config_.induct_station_scale * 0.5);
+            text_marker.pose.orientation.w = 1.0;
+            text_marker.text = "IN_" + std::to_string(station_id);
+            text_marker.scale.z = grid_resolution_ * 0.4;
+            text_marker.color.r = 1.0;
+            text_marker.color.g = 1.0;
+            text_marker.color.b = 1.0;
+            text_marker.color.a = 1.0;
+
+            marker_array.markers.push_back(text_marker);
+
+            marker_id++;
+        }
+
+        induct_stations_pub_->publish(marker_array);
+    }
+
+    void publish_eject_stations(const rclcpp::Time & timestamp)
+    {
+        visualization_msgs::msg::MarkerArray marker_array;
+
+        int marker_id = 0;
+        for (const auto & station : eject_stations_)
+        {
+            if (station.size() < 4) continue;
+
+            int64_t x = station[0];
+            int64_t y = station[1];
+            int64_t z = station[2];
+            int64_t station_id = station[3];
+
+            // Create station marker (cylinder)
+            visualization_msgs::msg::Marker marker;
+            marker.header.frame_id = frame_id_;
+            marker.header.stamp = timestamp;
+            marker.ns = "eject_stations";
+            marker.id = marker_id;
+            marker.type = visualization_msgs::msg::Marker::CYLINDER;
+            marker.action = visualization_msgs::msg::Marker::ADD;
+            marker.pose.position.x = x * grid_resolution_;
+            marker.pose.position.y = y * grid_resolution_;
+            marker.pose.position.z = z * grid_resolution_;
+            marker.pose.orientation.w = 1.0;
+            marker.scale.x = grid_resolution_ * viz_config_.eject_station_scale;
+            marker.scale.y = grid_resolution_ * viz_config_.eject_station_scale;
+            marker.scale.z = grid_resolution_ * viz_config_.eject_station_scale * 0.3;
+            marker.color.r = viz_config_.eject_station_color[0];
+            marker.color.g = viz_config_.eject_station_color[1];
+            marker.color.b = viz_config_.eject_station_color[2];
+            marker.color.a = viz_config_.eject_station_color[3];
+
+            marker_array.markers.push_back(marker);
+
+            // Create label marker
+            visualization_msgs::msg::Marker text_marker;
+            text_marker.header.frame_id = frame_id_;
+            text_marker.header.stamp = timestamp;
+            text_marker.ns = "eject_station_labels";
+            text_marker.id = marker_id;
+            text_marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+            text_marker.action = visualization_msgs::msg::Marker::ADD;
+            text_marker.pose.position.x = x * grid_resolution_;
+            text_marker.pose.position.y = y * grid_resolution_;
+            text_marker.pose.position.z = z * grid_resolution_ + (grid_resolution_ * viz_config_.eject_station_scale * 0.5);
+            text_marker.pose.orientation.w = 1.0;
+            text_marker.text = "OUT_" + std::to_string(station_id);
+            text_marker.scale.z = grid_resolution_ * 0.4;
+            text_marker.color.r = 1.0;
+            text_marker.color.g = 1.0;
+            text_marker.color.b = 1.0;
+            text_marker.color.a = 1.0;
+
+            marker_array.markers.push_back(text_marker);
+
+            marker_id++;
+        }
+
+        eject_stations_pub_->publish(marker_array);
+    }
+
     void agent_position_callback(const std_msgs::msg::Int64MultiArray::SharedPtr msg)
     {
-
         if (msg->data.size() != 4)
         {
             RCLCPP_WARN(this->get_logger(), "Received invalid agent positions array size: %zu, expected: 4 [agent_index, x, y, z])", msg->data.size());
@@ -491,7 +672,7 @@ private:
         if (agent_positions_[agent_index].empty())
         {
             agent_positions_[agent_index] = std::vector<int64_t>(3, 0);
-            RCLCPP_INFO(this->get_logger(), "Initialized new agent %ld", agent_index);
+            RCLCPP_INFO(this->get_logger(), "Initialized new agent %d", agent_index);
         }
 
         // Update agent position
@@ -499,7 +680,7 @@ private:
         agent_positions_[agent_index][1] = y;
         agent_positions_[agent_index][2] = z;
 
-        RCLCPP_DEBUG(this->get_logger(), "Updated agent %ld to position (%ld, %ld, %ld)", 
+        RCLCPP_DEBUG(this->get_logger(), "Updated agent %d to position (%ld, %ld, %ld)", 
                     agent_index, x, y, z);
     }
 
@@ -525,6 +706,8 @@ private:
     std::string frame_id_;
     std::vector<std::vector<int64_t>> obstacle_regions_;
     std::vector<std::vector<int64_t>> agent_positions_;
+    std::vector<std::vector<int64_t>> induct_stations_;
+    std::vector<std::vector<int64_t>> eject_stations_;
 
     // Visualization parameters
     struct VisualizationConfig {
@@ -536,6 +719,10 @@ private:
         std::vector<double> obstacle_color;
         double agent_scale;
         std::vector<double> agent_color;
+        double induct_station_scale;
+        std::vector<double> induct_station_color;
+        double eject_station_scale;
+        std::vector<double> eject_station_color;
     } viz_config_;
 
     // Topic names
@@ -544,6 +731,8 @@ private:
         std::string edges;
         std::string obstacles;
         std::string agents;
+        std::string induct_stations;
+        std::string eject_stations;
     } topic_name_;
 
     // Grid nodes
@@ -554,11 +743,14 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr grid_edges_pub_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr agent_markers_pub_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr obstacles_pub_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr induct_stations_pub_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr eject_stations_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
 
     // ROS2 subscribers
     rclcpp::Subscription<std_msgs::msg::Int64MultiArray>::SharedPtr agent_position_sub_;
 };
+
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
