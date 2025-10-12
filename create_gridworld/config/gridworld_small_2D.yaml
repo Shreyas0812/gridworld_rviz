@@ -22,7 +22,7 @@ create_gridworld_node:
       8, 8, 0, 12, 12, 0,     # Central square obstacle
       5, 18, 0, 15, 20, 0,    # Upper horizontal bar
       18, 5, 0, 20, 15, 0,    # Right vertical bar
-      20, 20, 0, 25, 25, 0    # Corner obstacle
+      20, 20, 0, 24, 24, 0    # Corner obstacle
     ]
     
     # Agent positions - Flattened array format
