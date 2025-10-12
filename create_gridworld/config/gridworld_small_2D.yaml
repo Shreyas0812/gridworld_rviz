@@ -35,6 +35,24 @@ create_gridworld_node:
       15, 15, 0     # Agent 5
     ]
     
+    # Induct (entry) stations - Flattened array format
+    # Each station: [x, y, z, station_id]
+    induct_stations: [
+      4, 4, 0, 1,      # Induct station 1 at (4,4,0)
+      25, 4, 0, 2,     # Induct station 2 at (25,4,0)
+      4, 25, 0, 3,     # Induct station 3 at (4,25,0)
+      16, 25, 0, 4     # Induct station 4 at (16,25,0)
+    ]
+    
+    # Eject (exit) stations - Flattened array format
+    # Each station: [x, y, z, station_id]
+    eject_stations: [
+      25, 25, 0, 1,    # Eject station 1 at (25,25,0)
+      4, 15, 0, 2,     # Eject station 2 at (4,15,0)
+      25, 15, 0, 3,    # Eject station 3 at (25,15,0)
+      15, 4, 0, 4      # Eject station 4 at (15,4,0)
+    ]
+    
     # Visualization settings
     visualization:
       # Node visualization
@@ -52,6 +70,14 @@ create_gridworld_node:
       # Agent visualization
       agent_scale: 0.4         # Standard size
       agent_color: [1.0, 0.0, 1.0, 1.0]   # Magenta for 2D contrast
+      
+      # Induct station visualization
+      induct_station_scale: 1.0    # Visible size for stations
+      induct_station_color: [0.0, 0.5, 1.0, 1.0]  # Light blue, fully opaque
+      
+      # Eject station visualization
+      eject_station_scale: 1.0     # Visible size for stations
+      eject_station_color: [1.0, 0.5, 0.0, 1.0]   # Orange, fully opaque
     
     # Frame settings
     frame_id: "map"
@@ -62,3 +88,5 @@ create_gridworld_node:
       edges: "gridworld/edges" 
       obstacles: "gridworld/obstacles"
       agents: "gridworld/agents"
+      induct_stations: "gridworld/induct_stations"
+      eject_stations: "gridworld/eject_stations"
