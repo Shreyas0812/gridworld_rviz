@@ -4,6 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include <vector>
 #include <string>
+#include <cstdint>
 
 namespace create_gridworld {
 

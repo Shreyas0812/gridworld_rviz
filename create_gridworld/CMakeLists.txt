@@ -21,7 +21,13 @@ find_package(visualization_msgs REQUIRED)
 # CPP
 include_directories(include)
 
-add_executable(create_gridworld_node src/create_gridworld_node.cpp)
+add_executable(create_gridworld_node 
+  src/create_gridworld_node.cpp
+  src/grid_world.cpp
+  src/config_manager.cpp
+  src/visualization_manager.cpp
+)
+
 ament_target_dependencies(create_gridworld_node 
   rclcpp 
   nav_msgs 

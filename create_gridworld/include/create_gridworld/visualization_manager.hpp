@@ -1,10 +1,12 @@
-// include/create_gridworld/visualization_manager.hpp
 #pragma once
 
 #include "rclcpp/rclcpp.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "create_gridworld/grid_world.hpp"
 #include "create_gridworld/config_manager.hpp"
+#include <memory>
+#include <vector>
+#include <cstdint>
 
 namespace create_gridworld {
 

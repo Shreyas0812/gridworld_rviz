@@ -1,4 +1,3 @@
-// include/create_gridworld/create_gridworld_node.hpp
 #pragma once
 
 #include "rclcpp/rclcpp.hpp"
@@ -6,6 +5,7 @@
 #include "create_gridworld/grid_world.hpp"
 #include "create_gridworld/config_manager.hpp"
 #include "create_gridworld/visualization_manager.hpp"
+#include <memory>
 
 namespace create_gridworld {
 
