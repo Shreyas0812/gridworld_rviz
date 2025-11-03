@@ -1,0 +1,156 @@
+# Warehouse 2D Gridworld Configuration Parameters
+# Scenario: Automated warehouse with truck docking (induct) and storage bins (eject)
+create_gridworld_node:
+  ros__parameters:
+    # Grid dimensions - 2D warehouse floor plan
+    grid_width: 30
+    grid_height: 30  
+    grid_depth: 1    # Only one layer for 2D
+    
+    # Grid resolution (meters per cell)
+    grid_resolution: 1.0
+    
+    # Publishing rate (Hz)
+    publish_rate: 20.0  # High rate for responsive warehouse operations
+    
+    # Obstacle configuration - Flattened array format
+    # Each obstacle region: [start_x, start_y, start_z, end_x, end_y, end_z]
+    obstacle_regions: [
+      # At the ends of eject stations
+      10, 4, 0, 10, 5, 0,
+      20, 4, 0, 20, 5, 0,
+      10, 12, 0, 10, 12, 0,
+      17, 12, 0, 17, 12, 0,
+      14, 19, 0, 14, 19, 0,
+      20, 19, 0, 20, 19, 0,
+      10, 26, 0, 10, 26, 0,
+      20, 26, 0, 20, 26, 0,
+
+      # Warehouse perimeter walls
+      0, 0, 0, 29, 1, 0,      # Bottom border
+      0, 28, 0, 29, 29, 0,    # Top border
+      0, 0, 0, 1, 29, 0,      # Left border  
+      28, 0, 0, 29, 29, 0,    # Right border
+      
+      # Structural columns (architectural support)
+      8, 8, 0, 9, 9, 0,       # Column 1
+      21, 8, 0, 22, 9, 0,     # Column 2
+      8, 21, 0, 9, 22, 0,     # Column 3
+      21, 21, 0, 22, 22, 0,   # Column 4
+      15, 15, 0, 16, 16, 0,   # Central column
+      
+      # Maintenance bay (right side of warehouse)
+      26, 5, 0, 27, 24, 0,    # Maintenance bay area
+      
+      # Dividers between induct stations (prevent cross-contamination)
+      2, 7, 0, 5, 8, 0,       # Divider between induct stations 1-2
+      2, 15, 0, 5, 16, 0,     # Divider between induct stations 2-3
+      2, 23, 0, 5, 24, 0      # Divider between induct stations 3-4
+    ]
+    
+    # Agent positions - Flattened array format
+    # Each agent position: [x, y, z]
+    agent_positions: [
+      6, 4, 0,      # Agent 0 (near induct zone)
+      6, 12, 0,     # Agent 1 (near induct zone)
+      6, 20, 0,     # Agent 2 (near induct zone)
+      18, 12, 0,    # Agent 3 (central zone)
+      19, 15, 0,    # Agent 4 (near storage zone)
+      19, 8, 0      # Agent 5 (near storage zone)
+    ]
+    
+    # Induct (entry) stations - Truck docking bays
+    # Flattened array format: [x, y, z, station_id]
+    # Located on left side where trucks dock
+    induct_stations: [
+      2, 4, 0, 1,      # Induct/Dock 1
+      2, 12, 0, 2,     # Induct/Dock 2
+      2, 20, 0, 3,     # Induct/Dock 3
+      2, 26, 0, 4,      # Induct/Dock 4
+      26, 4, 0, 5,
+      27, 4, 0, 5,
+      26, 25, 0, 6,
+      27, 25, 0, 6,
+    ]
+    
+    # Eject (exit) stations - Storage bins
+    # Flattened array format: [x, y, z, station_id]
+    # Distributed across warehouse storage areas
+    eject_stations: [
+      11, 4, 0, 1,     # Eject/Storage Area 1
+      11, 5, 0, 2,
+      12, 4, 0, 3,     
+      12, 5, 0, 4,
+      13, 4, 0, 5,
+      13, 5, 0, 6,
+      14, 4, 0, 7,
+      14, 5, 0, 8,
+      15, 4, 0, 9,
+      15, 5, 0, 10,
+      16, 4, 0, 11,
+      16, 5, 0, 12,
+      17, 4, 0, 13,
+      17, 5, 0, 14,
+      18, 4, 0, 15,
+      18, 5, 0, 16,
+      19, 4, 0, 17,
+      19, 5, 0, 18,
+      11, 12, 0, 19,   # Eject/Storage Area 2
+      12, 12, 0, 20,
+      13, 12, 0, 21,
+      14, 12, 0, 22,
+      15, 12, 0, 23,
+      16, 12, 0, 24,
+      15, 19, 0, 25,  # Eject/Storage Area 3
+      16, 19, 0, 26,
+      17, 19, 0, 27,
+      18, 19, 0, 28,
+      19, 19, 0, 29,
+      11, 26, 0, 30,   # Eject/Storage Area 4
+      12, 26, 0, 31,
+      13, 26, 0, 32,
+      14, 26, 0, 33,
+      15, 26, 0, 34,
+      16, 26, 0, 35,
+      17, 26, 0, 36,
+      18, 26, 0, 37,
+      19, 26, 0, 38
+    ]
+    
+    # Visualization settings
+    visualization:
+      # Node visualization
+      node_scale: 0.15         # Large points for visibility
+      node_color: [0.0, 1.0, 0.0, 0.7]  # Bright green, semi-transparent
+      
+      # Edge visualization
+      edge_width: 0.05         # Thick lines for clear visibility
+      edge_color: [0.0, 0.0, 1.0, 0.6]  # Blue, semi-transparent
+      
+      # Obstacle visualization
+      obstacle_scale: 0.95     # Slightly smaller for visual clarity
+      obstacle_color: [1.0, 0.0, 0.0, 0.9]  # Bright red (walls, columns, barriers)
+      
+      # Agent visualization
+      agent_scale: 0.4         # Standard robot size
+      agent_color: [1.0, 0.0, 1.0, 1.0]   # Magenta for visibility
+      
+      # Induct station visualization (truck docking)
+      induct_station_scale: 1.0    # Prominent size for docking bays
+      induct_station_color: [0.0, 0.5, 1.0, 1.0]  # Light blue (entry points)
+      
+      # Eject station visualization (storage bins)
+      eject_station_scale: 0.8     # Prominent size for storage locations
+      eject_station_color: [1.0, 0.5, 0.0, 1.0]   # Orange (storage/exit points)
+    
+    # Frame settings
+    frame_id: "map"
+    
+    # Topic names
+    topics:
+      nodes: "gridworld/nodes"
+      edges: "gridworld/edges" 
+      obstacles: "gridworld/obstacles"
+      agents: "gridworld/agents"
+      induct_stations: "gridworld/induct_stations"
+      eject_stations: "gridworld/eject_stations"
