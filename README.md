@@ -29,7 +29,7 @@ This package creates dynamic grid worlds with configurable dimensions, obstacles
    
 ### Launch
 
-**Default Configuration (Small 2D)**:
+**Default Configuration (Small Warehouse 2D, 30x30)**:
 ```bash
 ros2 launch create_gridworld create_gridworld.launch.py
 ```

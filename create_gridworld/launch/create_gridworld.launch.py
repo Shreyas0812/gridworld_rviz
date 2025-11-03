@@ -15,8 +15,8 @@ def generate_launch_description():
 
     config_type_arg = DeclareLaunchArgument(
         "config_type",
-        default_value="small_2D",
-        description="Configuration type: small_2D, small_3D, large_2D, large_3D"
+        default_value="warehouse_small",
+        description="Configuration type: small_2D, small_3D, large_2D, large_3D, warehouse_small"
     )
 
     gridworld_params = PathJoinSubstitution([
