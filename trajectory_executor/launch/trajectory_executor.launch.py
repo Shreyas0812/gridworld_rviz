@@ -9,12 +9,11 @@ def generate_launch_description():
 
     # Configure your CSV files here - add or remove as needed
     csv_files = [
-        'test_generated_trajectories',
-        'test_generated_trajectories2',
-        # Add more CSV filenames here (without .csv extension)
-        # 'trajectory3',
-        # 'trajectory4',
-        # 'trajectory5',
+        'agent_1_trajectory',
+        'agent_2_trajectory',
+        'agent_3_trajectory',
+        'agent_4_trajectory',
+        'agent_5_trajectory',
     ]
 
     launch_description_list = []
