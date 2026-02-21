@@ -83,11 +83,11 @@ void CreateGridWorldNode::updateAgentPosition(int agent_index, int new_x, int ne
     
     // Expand agent positions if needed
     while (static_cast<int>(agent_positions.size()) <= agent_index) {
-        agent_positions.emplace_back(std::vector<int64_t>{0, 0, 0});
+        agent_positions.emplace_back(std::vector<int64_t>{0, 0, 0, static_cast<int64_t>(agent_positions.size())});
         RCLCPP_INFO(this->get_logger(), "Initialized new agent %d", static_cast<int>(agent_positions.size() - 1));
     }
     
-    // Update position
+    // Update position (preserve agent_id in index 3)
     agent_positions[agent_index][0] = new_x;
     agent_positions[agent_index][1] = new_y;
     agent_positions[agent_index][2] = new_z;

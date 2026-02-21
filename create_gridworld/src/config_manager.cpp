@@ -8,6 +8,7 @@ ConfigManager::ConfigManager(rclcpp::Node* node)
     loadParameters(node);
     loadVisualizationConfig(node);
     loadTopicConfig(node);
+    loadEnergyConfig(node);
     validateParameters();
     
     // Log all loaded parameters (moved from original constructor)
@@ -18,8 +19,8 @@ ConfigManager::ConfigManager(rclcpp::Node* node)
     RCLCPP_INFO(node->get_logger(), "Publish rate: %.2f Hz", publish_rate_);
     RCLCPP_INFO(node->get_logger(), "Frame ID: %s", frame_id_.c_str());
 
-    RCLCPP_INFO(node->get_logger(), "Loaded %zu obstacle regions, %zu agent start positions, %zu induct stations, %zu eject stations", 
-        obstacle_regions_.size(), agent_positions_.size(), induct_stations_.size(), eject_stations_.size());
+    RCLCPP_INFO(node->get_logger(), "Loaded %zu obstacle regions, %zu agent start positions, %zu induct stations, %zu eject stations, %zu charging stations", 
+        obstacle_regions_.size(), agent_positions_.size(), induct_stations_.size(), eject_stations_.size(), charging_stations_.size());
 
     // Log obstacle regions
     RCLCPP_INFO(node->get_logger(), "Obstacle regions:");
@@ -37,14 +38,8 @@ ConfigManager::ConfigManager(rclcpp::Node* node)
     // Log agent positions
     RCLCPP_INFO(node->get_logger(), "Agent start positions:");
     for (const auto & pos : agent_positions_) {
-        std::ostringstream oss;
-        oss << "[";
-        for (size_t i = 0; i < pos.size(); ++i) {
-            oss << pos[i];
-            if (i + 1 < pos.size()) oss << ", ";
-        }
-        oss << "]";
-        RCLCPP_INFO(node->get_logger(), "%s", oss.str().c_str());
+        RCLCPP_INFO(node->get_logger(), "  [%ld, %ld, %ld] ID: %ld", 
+            pos[0], pos[1], pos[2], pos[3]);
     }
 
     // Log stations
@@ -59,6 +54,19 @@ ConfigManager::ConfigManager(rclcpp::Node* node)
         RCLCPP_INFO(node->get_logger(), "  [%ld, %ld, %ld] ID: %ld", 
             station[0], station[1], station[2], station[3]);
     }
+
+    RCLCPP_INFO(node->get_logger(), "Charging stations:");
+    for (const auto & station : charging_stations_) {
+        RCLCPP_INFO(node->get_logger(), "  [%ld, %ld, %ld] ID: %ld", 
+            station[0], station[1], station[2], station[3]);
+    }
+
+    // Log energy config
+    RCLCPP_INFO(node->get_logger(), "Energy config:");
+    RCLCPP_INFO(node->get_logger(), "  max_energy: %d", energy_config_.max_energy);
+    RCLCPP_INFO(node->get_logger(), "  charge_duration: %d", energy_config_.charge_duration);
+    RCLCPP_INFO(node->get_logger(), "  charge_rate: %d", energy_config_.charge_rate);
+    RCLCPP_INFO(node->get_logger(), "  charging_trigger_multiplier: %.2f", energy_config_.charging_trigger_multiplier);
 
     // Log visualization config
     RCLCPP_INFO(node->get_logger(), "Visualization config:");
@@ -80,6 +88,9 @@ ConfigManager::ConfigManager(rclcpp::Node* node)
     RCLCPP_INFO(node->get_logger(), "  eject_station_scale: %.2f", viz_config_.eject_station_scale);
     RCLCPP_INFO(node->get_logger(), "  eject_station_color: [%.2f, %.2f, %.2f, %.2f]", 
         viz_config_.eject_station_color[0], viz_config_.eject_station_color[1], viz_config_.eject_station_color[2], viz_config_.eject_station_color[3]);
+    RCLCPP_INFO(node->get_logger(), "  charging_station_scale: %.2f", viz_config_.charging_station_scale);
+    RCLCPP_INFO(node->get_logger(), "  charging_station_color: [%.2f, %.2f, %.2f, %.2f]", 
+        viz_config_.charging_station_color[0], viz_config_.charging_station_color[1], viz_config_.charging_station_color[2], viz_config_.charging_station_color[3]);
 
     // Log topic names
     RCLCPP_INFO(node->get_logger(), "Topic names:");
@@ -89,6 +100,7 @@ ConfigManager::ConfigManager(rclcpp::Node* node)
     RCLCPP_INFO(node->get_logger(), "  agents: %s", topic_config_.agents.c_str());
     RCLCPP_INFO(node->get_logger(), "  induct_stations: %s", topic_config_.induct_stations.c_str());
     RCLCPP_INFO(node->get_logger(), "  eject_stations: %s", topic_config_.eject_stations.c_str());
+    RCLCPP_INFO(node->get_logger(), "  charging_stations: %s", topic_config_.charging_stations.c_str());
 }
 
 void ConfigManager::loadParameters(rclcpp::Node* node)
@@ -113,6 +125,7 @@ void ConfigManager::loadParameters(rclcpp::Node* node)
     node->declare_parameter("agent_positions", std::vector<int64_t>{});
     node->declare_parameter("induct_stations", std::vector<int64_t>{});
     node->declare_parameter("eject_stations", std::vector<int64_t>{});
+    node->declare_parameter("charging_stations", std::vector<int64_t>{});
 
     // Process obstacle regions
     auto flat_obstacles = node->get_parameter("obstacle_regions").as_integer_array();
@@ -124,12 +137,12 @@ void ConfigManager::loadParameters(rclcpp::Node* node)
         });
     }
 
-    // Process agent positions
+    // Process agent positions (x, y, z, agent_id)
     auto flat_agents = node->get_parameter("agent_positions").as_integer_array();
     agent_positions_.clear();
-    for (size_t i = 0; i < flat_agents.size(); i += 3) {
+    for (size_t i = 0; i < flat_agents.size(); i += 4) {
         agent_positions_.emplace_back(std::vector<int64_t>{
-            flat_agents[i], flat_agents[i + 1], flat_agents[i + 2]
+            flat_agents[i], flat_agents[i + 1], flat_agents[i + 2], flat_agents[i + 3]
         });
     }
 
@@ -150,6 +163,15 @@ void ConfigManager::loadParameters(rclcpp::Node* node)
             flat_eject[i], flat_eject[i + 1], flat_eject[i + 2], flat_eject[i + 3]
         });
     }
+
+    // Process charging stations
+    auto flat_charging = node->get_parameter("charging_stations").as_integer_array();
+    charging_stations_.clear();
+    for (size_t i = 0; i < flat_charging.size(); i += 4) {
+        charging_stations_.emplace_back(std::vector<int64_t>{
+            flat_charging[i], flat_charging[i + 1], flat_charging[i + 2], flat_charging[i + 3]
+        });
+    }
 }
 
 void ConfigManager::loadVisualizationConfig(rclcpp::Node* node)
@@ -167,6 +189,8 @@ void ConfigManager::loadVisualizationConfig(rclcpp::Node* node)
     node->declare_parameter("visualization.induct_station_color", std::vector<double>{0.0, 0.5, 1.0, 1.0});
     node->declare_parameter("visualization.eject_station_scale", 1.2);
     node->declare_parameter("visualization.eject_station_color", std::vector<double>{1.0, 0.5, 0.0, 1.0});
+    node->declare_parameter("visualization.charging_station_scale", 0.9);
+    node->declare_parameter("visualization.charging_station_color", std::vector<double>{0.0, 1.0, 0.5, 1.0});
 
     // Get visualization parameters
     viz_config_.node_scale = node->get_parameter("visualization.node_scale").as_double();
@@ -181,6 +205,8 @@ void ConfigManager::loadVisualizationConfig(rclcpp::Node* node)
     viz_config_.induct_station_color = node->get_parameter("visualization.induct_station_color").as_double_array();
     viz_config_.eject_station_scale = node->get_parameter("visualization.eject_station_scale").as_double();
     viz_config_.eject_station_color = node->get_parameter("visualization.eject_station_color").as_double_array();
+    viz_config_.charging_station_scale = node->get_parameter("visualization.charging_station_scale").as_double();
+    viz_config_.charging_station_color = node->get_parameter("visualization.charging_station_color").as_double_array();
 }
 
 void ConfigManager::loadTopicConfig(rclcpp::Node* node)
@@ -192,6 +218,7 @@ void ConfigManager::loadTopicConfig(rclcpp::Node* node)
     node->declare_parameter("topics.agents", std::string("gridworld/agents"));
     node->declare_parameter("topics.induct_stations", std::string("gridworld/induct_stations"));
     node->declare_parameter("topics.eject_stations", std::string("gridworld/eject_stations"));
+    node->declare_parameter("topics.charging_stations", std::string("gridworld/charging_stations"));
 
     // Get topic names
     topic_config_.nodes = node->get_parameter("topics.nodes").as_string();
@@ -200,6 +227,20 @@ void ConfigManager::loadTopicConfig(rclcpp::Node* node)
     topic_config_.agents = node->get_parameter("topics.agents").as_string();
     topic_config_.induct_stations = node->get_parameter("topics.induct_stations").as_string();
     topic_config_.eject_stations = node->get_parameter("topics.eject_stations").as_string();
+    topic_config_.charging_stations = node->get_parameter("topics.charging_stations").as_string();
+}
+
+void ConfigManager::loadEnergyConfig(rclcpp::Node* node)
+{
+    node->declare_parameter("energy.max_energy", 100);
+    node->declare_parameter("energy.charge_duration", 20);
+    node->declare_parameter("energy.charge_rate", 1);
+    node->declare_parameter("energy.charging_trigger_multiplier", 3.0);
+
+    energy_config_.max_energy = node->get_parameter("energy.max_energy").as_int();
+    energy_config_.charge_duration = node->get_parameter("energy.charge_duration").as_int();
+    energy_config_.charge_rate = node->get_parameter("energy.charge_rate").as_int();
+    energy_config_.charging_trigger_multiplier = node->get_parameter("energy.charging_trigger_multiplier").as_double();
 }
 
 void ConfigManager::validateParameters()

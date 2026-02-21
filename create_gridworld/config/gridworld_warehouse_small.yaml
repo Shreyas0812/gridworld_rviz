@@ -48,15 +48,15 @@ create_gridworld_node:
       2, 23, 0, 5, 24, 0      # Divider between induct stations 3-4
     ]
     
-    # Agent positions - Flattened array format
-    # Each agent position: [x, y, z]
+    # Agent positions and IDs - Flattened array format
+    # Each agent: [x, y, z, agent_id]
     agent_positions: [
-      6, 4, 0,      # Agent 0 (near induct zone)
-      6, 12, 0,     # Agent 1 (near induct zone)
-      6, 20, 0,     # Agent 2 (near induct zone)
-      18, 12, 0,    # Agent 3 (central zone)
-      19, 15, 0,    # Agent 4 (near storage zone)
-      19, 8, 0      # Agent 5 (near storage zone)
+      6, 4, 0, 1,      # Agent 1 (near induct zone)
+      6, 12, 0, 2,     # Agent 2 (near induct zone)
+      6, 20, 0, 3,     # Agent 3 (near induct zone)
+      18, 12, 0, 4,    # Agent 4 (central zone)
+      19, 15, 0, 5,    # Agent 5 (near storage zone)
+      19, 8, 0, 6      # Agent 6 (near storage zone)
     ]
     
     # Induct (entry) stations - Truck docking bays
@@ -68,9 +68,9 @@ create_gridworld_node:
       2, 20, 0, 3,     # Induct/Dock 3
       2, 26, 0, 4,      # Induct/Dock 4
       26, 4, 0, 5,
-      27, 4, 0, 5,
-      26, 25, 0, 6,
-      27, 25, 0, 6,
+      27, 4, 0, 6,
+      26, 25, 0, 7,
+      27, 25, 0, 8,
     ]
     
     # Eject (exit) stations - Storage bins
@@ -117,6 +117,27 @@ create_gridworld_node:
       19, 26, 0, 38
     ]
     
+    # Energy / charging parameters
+    energy:
+      max_energy: 100                  # Maximum battery capacity (grid steps)
+      charge_duration: 20              # Timesteps spent at charger per visit
+      charge_rate: 1                   # Energy units restored per charging timestep
+      charging_trigger_multiplier: 3.0 # Trigger charging when energy <= multiplier * dist_to_charger
+
+    # Charging stations - Dedicated docking cells inside the maintenance bay
+    # Flattened array format: [x, y, z, station_id]
+    # Located at x=26 (left edge of maintenance bay), accessible from x=25
+    # 6 stations for 6 agents so all can charge without corridor congestion
+    # Cells overwrite the obstacle marking, so no obstacle_regions change needed
+    charging_stations: [
+      26, 5, 0, 1,     # Charging Station 1
+      26, 8, 0, 2,     # Charging Station 2
+      26, 11, 0, 3,    # Charging Station 3
+      26, 14, 0, 4,    # Charging Station 4
+      26, 20, 0, 5,    # Charging Station 5
+      26, 23, 0, 6     # Charging Station 6
+    ]
+
     # Visualization settings
     visualization:
       # Node visualization
@@ -154,3 +175,4 @@ create_gridworld_node:
       agents: "gridworld/agents"
       induct_stations: "gridworld/induct_stations"
       eject_stations: "gridworld/eject_stations"
+      charging_stations: "gridworld/charging_stations"

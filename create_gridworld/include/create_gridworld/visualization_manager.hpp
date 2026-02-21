@@ -25,6 +25,7 @@ private:
     void publishAgentMarkers();
     void publishInductStations();
     void publishEjectStations();
+    void publishChargingStations();
     
     rclcpp::Node* node_;
     const ConfigManager& config_;
@@ -37,6 +38,7 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr agent_markers_pub_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr induct_stations_pub_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr eject_stations_pub_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr charging_stations_pub_;
 };
 
 } // namespace create_gridworld

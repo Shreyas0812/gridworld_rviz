@@ -20,6 +20,7 @@ void VisualizationManager::createPublishers()
     agent_markers_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(topics.agents, 10);
     induct_stations_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(topics.induct_stations, 10);
     eject_stations_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(topics.eject_stations, 10);
+    charging_stations_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(topics.charging_stations, 10);
 }
 
 void VisualizationManager::publishAll(const GridWorld& grid_world)
@@ -30,6 +31,7 @@ void VisualizationManager::publishAll(const GridWorld& grid_world)
     publishAgentMarkers();
     publishInductStations();
     publishEjectStations();
+    publishChargingStations();
 }
 
 void VisualizationManager::updateAgentPositions(const std::vector<std::vector<int64_t>>& agent_positions)
@@ -175,16 +177,16 @@ void VisualizationManager::publishAgentMarkers()
     
     visualization_msgs::msg::MarkerArray marker_array;
 
-    std::vector<std::tuple<int, int, int>> agent_pos;
+    std::vector<std::tuple<int, int, int, int>> agent_pos;
     for (const auto & pos : current_agent_positions_)
     {
-        if (pos.size() < 3) continue;
-        agent_pos.emplace_back(pos[0], pos[1], pos[2]);
+        if (pos.size() < 4) continue;
+        agent_pos.emplace_back(pos[0], pos[1], pos[2], pos[3]);
     }
     
-    int agent_id = 0;
-    for (const auto & [x, y, z] : agent_pos)
+    for (const auto & [x, y, z, aid] : agent_pos)
     {
+        int agent_id = aid;
         visualization_msgs::msg::Marker marker;
         marker.header.frame_id = config_.getFrameId();
         marker.header.stamp = timestamp;
@@ -226,8 +228,6 @@ void VisualizationManager::publishAgentMarkers()
         text_marker.color.a = 1.0;
 
         marker_array.markers.push_back(text_marker);
-
-        agent_id++;
     }
 
     agent_markers_pub_->publish(marker_array);
@@ -363,6 +363,72 @@ void VisualizationManager::publishEjectStations()
     }
 
     eject_stations_pub_->publish(marker_array);
+}
+
+void VisualizationManager::publishChargingStations()
+{
+    auto timestamp = node_->now();
+    const auto& viz_config = config_.getVisualizationConfig();
+    
+    visualization_msgs::msg::MarkerArray marker_array;
+
+    int marker_id = 0;
+    for (const auto & station : config_.getChargingStations())
+    {
+        if (station.size() < 4) continue;
+
+        int64_t x = station[0];
+        int64_t y = station[1];
+        int64_t z = station[2];
+        int64_t station_id = station[3];
+
+        // Create station marker (cylinder)
+        visualization_msgs::msg::Marker marker;
+        marker.header.frame_id = config_.getFrameId();
+        marker.header.stamp = timestamp;
+        marker.ns = "charging_stations";
+        marker.id = marker_id;
+        marker.type = visualization_msgs::msg::Marker::CYLINDER;
+        marker.action = visualization_msgs::msg::Marker::ADD;
+        marker.pose.position.x = x * config_.getGridResolution();
+        marker.pose.position.y = y * config_.getGridResolution();
+        marker.pose.position.z = z * config_.getGridResolution();
+        marker.pose.orientation.w = 1.0;
+        marker.scale.x = config_.getGridResolution() * viz_config.charging_station_scale;
+        marker.scale.y = config_.getGridResolution() * viz_config.charging_station_scale;
+        marker.scale.z = config_.getGridResolution() * viz_config.charging_station_scale * 0.3;
+        marker.color.r = viz_config.charging_station_color[0];
+        marker.color.g = viz_config.charging_station_color[1];
+        marker.color.b = viz_config.charging_station_color[2];
+        marker.color.a = viz_config.charging_station_color[3];
+
+        marker_array.markers.push_back(marker);
+
+        // Create label marker
+        visualization_msgs::msg::Marker text_marker;
+        text_marker.header.frame_id = config_.getFrameId();
+        text_marker.header.stamp = timestamp;
+        text_marker.ns = "charging_station_labels";
+        text_marker.id = marker_id;
+        text_marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+        text_marker.action = visualization_msgs::msg::Marker::ADD;
+        text_marker.pose.position.x = x * config_.getGridResolution();
+        text_marker.pose.position.y = y * config_.getGridResolution();
+        text_marker.pose.position.z = z * config_.getGridResolution() + (config_.getGridResolution() * viz_config.charging_station_scale * 0.5);
+        text_marker.pose.orientation.w = 1.0;
+        text_marker.text = "CHG_" + std::to_string(station_id);
+        text_marker.scale.z = config_.getGridResolution() * 0.4;
+        text_marker.color.r = 1.0;
+        text_marker.color.g = 1.0;
+        text_marker.color.b = 1.0;
+        text_marker.color.a = 1.0;
+
+        marker_array.markers.push_back(text_marker);
+
+        marker_id++;
+    }
+
+    charging_stations_pub_->publish(marker_array);
 }
 
 } // namespace create_gridworld

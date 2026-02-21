@@ -21,6 +21,15 @@ struct VisualizationConfig {
     std::vector<double> induct_station_color;
     double eject_station_scale;
     std::vector<double> eject_station_color;
+    double charging_station_scale;
+    std::vector<double> charging_station_color;
+};
+
+struct EnergyConfig {
+    int max_energy;
+    int charge_duration;
+    int charge_rate;
+    double charging_trigger_multiplier;
 };
 
 struct TopicConfig {
@@ -30,6 +39,7 @@ struct TopicConfig {
     std::string agents;
     std::string induct_stations;
     std::string eject_stations;
+    std::string charging_stations;
 };
 
 class ConfigManager {
@@ -49,15 +59,18 @@ public:
     const std::vector<std::vector<int64_t>>& getAgentPositions() const { return agent_positions_; }
     const std::vector<std::vector<int64_t>>& getInductStations() const { return induct_stations_; }
     const std::vector<std::vector<int64_t>>& getEjectStations() const { return eject_stations_; }
+    const std::vector<std::vector<int64_t>>& getChargingStations() const { return charging_stations_; }
     
     // Configuration structs
     const VisualizationConfig& getVisualizationConfig() const { return viz_config_; }
     const TopicConfig& getTopicConfig() const { return topic_config_; }
+    const EnergyConfig& getEnergyConfig() const { return energy_config_; }
 
 private:
     void loadParameters(rclcpp::Node* node);
     void loadVisualizationConfig(rclcpp::Node* node);
     void loadTopicConfig(rclcpp::Node* node);
+    void loadEnergyConfig(rclcpp::Node* node);
     void validateParameters();
     
     // Grid parameters
@@ -70,10 +83,12 @@ private:
     std::vector<std::vector<int64_t>> agent_positions_;
     std::vector<std::vector<int64_t>> induct_stations_;
     std::vector<std::vector<int64_t>> eject_stations_;
+    std::vector<std::vector<int64_t>> charging_stations_;
     
     // Configuration structs
     VisualizationConfig viz_config_;
     TopicConfig topic_config_;
+    EnergyConfig energy_config_;
 };
 
 } // namespace create_gridworld
