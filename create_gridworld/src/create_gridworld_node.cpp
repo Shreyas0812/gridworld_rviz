@@ -52,11 +52,11 @@ void CreateGridWorldNode::agentPositionCallback(const std_msgs::msg::Int64MultiA
 {
     if (msg->data.size() != 4)
     {
-        RCLCPP_WARN(this->get_logger(), "Received invalid agent positions array size: %zu, expected: 4 [agent_index, x, y, z])", msg->data.size());
+        RCLCPP_WARN(this->get_logger(), "Received invalid agent positions array size: %zu, expected: 4 [agent_id, x, y, z])", msg->data.size());
         return;
     }
 
-    int agent_index = msg->data[0];
+    int agent_id = msg->data[0];
     int64_t x = msg->data[1];
     int64_t y = msg->data[2];
     int64_t z = msg->data[3];
@@ -69,32 +69,36 @@ void CreateGridWorldNode::agentPositionCallback(const std_msgs::msg::Int64MultiA
         return;
     }
 
-    updateAgentPosition(agent_index, x, y, z);
+    updateAgentPosition(agent_id, x, y, z);
     RCLCPP_DEBUG(this->get_logger(), "Updated agent %d to position (%ld, %ld, %ld)", 
-                agent_index, x, y, z);
+                agent_id, x, y, z);
 }
 
-void CreateGridWorldNode::updateAgentPosition(int agent_index, int new_x, int new_y, int new_z)
+void CreateGridWorldNode::updateAgentPosition(int agent_id, int new_x, int new_y, int new_z)
 {
-    // Get current agent positions from config
-    auto agent_positions = config_manager_->getAgentPositions();
+    // Get current agent positions from the live visualization state
+    auto agent_positions = viz_manager_->getCurrentAgentPositions();
     
-    // Ensure the agent index is valid
-    if (agent_index < 0) {
-        RCLCPP_WARN(this->get_logger(), "Invalid agent index %d", agent_index);
-        return;
+    // Find existing slot by matching agent_id (stored at pos[3])
+    int slot = -1;
+    for (size_t i = 0; i < agent_positions.size(); ++i) {
+        if (agent_positions[i].size() >= 4 && agent_positions[i][3] == agent_id) {
+            slot = static_cast<int>(i);
+            break;
+        }
     }
-    
-    // Expand agent positions if needed
-    while (static_cast<int>(agent_positions.size()) <= agent_index) {
-        agent_positions.emplace_back(std::vector<int64_t>{0, 0, 0, static_cast<int64_t>(agent_positions.size())});
-        RCLCPP_INFO(this->get_logger(), "Initialized new agent %d", static_cast<int>(agent_positions.size() - 1));
+
+    // If no slot found, create a new one
+    if (slot < 0) {
+        slot = static_cast<int>(agent_positions.size());
+        agent_positions.emplace_back(std::vector<int64_t>{0, 0, 0, static_cast<int64_t>(agent_id)});
+        RCLCPP_INFO(this->get_logger(), "Initialized new agent %d at slot %d", agent_id, slot);
     }
     
     // Update position (preserve agent_id in index 3)
-    agent_positions[agent_index][0] = new_x;
-    agent_positions[agent_index][1] = new_y;
-    agent_positions[agent_index][2] = new_z;
+    agent_positions[slot][0] = new_x;
+    agent_positions[slot][1] = new_y;
+    agent_positions[slot][2] = new_z;
     
     // Update the visualization manager
     viz_manager_->updateAgentPositions(agent_positions);

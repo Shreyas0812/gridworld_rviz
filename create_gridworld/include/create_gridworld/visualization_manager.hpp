@@ -16,6 +16,7 @@ public:
     
     void publishAll(const GridWorld& grid_world);
     void updateAgentPositions(const std::vector<std::vector<int64_t>>& agent_positions);
+    const std::vector<std::vector<int64_t>>& getCurrentAgentPositions() const { return current_agent_positions_; }
 
 private:
     void createPublishers();

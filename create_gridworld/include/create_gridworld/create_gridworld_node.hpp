@@ -16,7 +16,7 @@ public:
 private:
     void publishGridworld();
     void agentPositionCallback(const std_msgs::msg::Int64MultiArray::SharedPtr msg);
-    void updateAgentPosition(int agent_index, int new_x, int new_y, int new_z);
+    void updateAgentPosition(int agent_id, int new_x, int new_y, int new_z);
     
     // Core components
     std::unique_ptr<ConfigManager> config_manager_;
