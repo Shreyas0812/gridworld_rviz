@@ -1,0 +1,257 @@
+# Large Warehouse 2D Gridworld Configuration Parameters
+# Scenario: Large automated warehouse with truck docking (induct) and storage bins (eject)
+# Grid: 60x60, 12 agents, 12 induct stations, 80 eject stations, 12 charging stations
+create_gridworld_node:
+  ros__parameters:
+    # Grid dimensions - Large 2D warehouse floor plan
+    grid_width: 60
+    grid_height: 60
+    grid_depth: 1    # Only one layer for 2D
+    
+    # Grid resolution (meters per cell)
+    grid_resolution: 1.0
+    
+    # Publishing rate (Hz)
+    publish_rate: 10.0  # Moderate rate for larger world
+    
+    # Obstacle configuration - Flattened array format
+    # Each obstacle region: [start_x, start_y, start_z, end_x, end_y, end_z]
+    obstacle_regions: [
+      # Eject station end-caps (boundaries of storage rows)
+      20, 4, 0, 20, 5, 0,       # Left cap - Storage Area 1
+      29, 4, 0, 29, 5, 0,       # Right cap - Storage Area 1
+      20, 14, 0, 20, 14, 0,     # Left cap - Storage Area 2
+      33, 14, 0, 33, 14, 0,     # Right cap - Storage Area 2
+      20, 24, 0, 20, 24, 0,     # Left cap - Storage Area 3
+      33, 24, 0, 33, 24, 0,     # Right cap - Storage Area 3
+      25, 36, 0, 25, 36, 0,     # Left cap - Storage Area 4
+      38, 36, 0, 38, 36, 0,     # Right cap - Storage Area 4
+      20, 46, 0, 20, 47, 0,     # Left cap - Storage Area 5
+      29, 46, 0, 29, 47, 0,     # Right cap - Storage Area 5
+      20, 54, 0, 20, 54, 0,     # Left cap - Storage Area 6
+      33, 54, 0, 33, 54, 0,     # Right cap - Storage Area 6
+
+      # Warehouse perimeter walls (2-cell thick)
+      0, 0, 0, 59, 1, 0,        # Bottom border
+      0, 58, 0, 59, 59, 0,      # Top border
+      0, 0, 0, 1, 59, 0,        # Left border
+      58, 0, 0, 59, 59, 0,      # Right border
+      
+      # Structural columns (2x2 architectural support)
+      16, 16, 0, 17, 17, 0,     # Column 1
+      42, 16, 0, 43, 17, 0,     # Column 2
+      16, 29, 0, 17, 30, 0,     # Column 3
+      42, 29, 0, 43, 30, 0,     # Column 4
+      16, 42, 0, 17, 43, 0,     # Column 5
+      42, 42, 0, 43, 43, 0,     # Column 6
+      29, 29, 0, 30, 30, 0,     # Central column
+      
+      # Maintenance bay (right side of warehouse)
+      54, 5, 0, 55, 54, 0,      # Maintenance bay area
+      
+      # Dividers between induct stations (prevent cross-contamination)
+      2, 9, 0, 7, 10, 0,        # Divider between induct stations 1-2
+      2, 17, 0, 7, 18, 0,       # Divider between induct stations 2-3
+      2, 25, 0, 7, 26, 0,       # Divider between induct stations 3-4
+      2, 33, 0, 7, 34, 0,       # Divider between induct stations 4-5
+      2, 41, 0, 7, 42, 0,       # Divider between induct stations 5-6
+      2, 49, 0, 7, 50, 0        # Divider between induct stations 6-7
+    ]
+    
+    # Agent positions and IDs - Flattened array format
+    # Each agent: [x, y, z, agent_id]
+    agent_positions: [
+      8, 5, 0, 1,       # Agent 1 (near induct zone)
+      8, 13, 0, 2,      # Agent 2 (near induct zone)
+      8, 21, 0, 3,      # Agent 3 (near induct zone)
+      8, 29, 0, 4,      # Agent 4 (near induct zone)
+      8, 37, 0, 5,      # Agent 5 (near induct zone)
+      8, 45, 0, 6,      # Agent 6 (near induct zone)
+      36, 10, 0, 7,     # Agent 7 (near storage zone)
+      36, 20, 0, 8,     # Agent 8 (near storage zone)
+      36, 35, 0, 9,     # Agent 9 (central zone)
+      36, 45, 0, 10,    # Agent 10 (near storage zone)
+      25, 25, 0, 11,    # Agent 11 (central zone)
+      25, 40, 0, 12     # Agent 12 (central zone)
+    ]
+    
+    # Induct (entry) stations - Truck docking bays
+    # Flattened array format: [x, y, z, station_id]
+    induct_stations: [
+      # Left side docks (truck bays along left wall)
+      2, 5, 0, 1,       # Induct/Dock 1
+      2, 13, 0, 2,      # Induct/Dock 2
+      2, 21, 0, 3,      # Induct/Dock 3
+      2, 29, 0, 4,      # Induct/Dock 4
+      2, 37, 0, 5,      # Induct/Dock 5
+      2, 45, 0, 6,      # Induct/Dock 6
+      2, 53, 0, 7,      # Induct/Dock 7
+      2, 56, 0, 8,      # Induct/Dock 8
+      # Right side docks (near maintenance bay)
+      54, 4, 0, 9,
+      55, 4, 0, 10,
+      54, 55, 0, 11,
+      55, 55, 0, 12
+    ]
+    
+    # Eject (exit) stations - Storage bins
+    # Flattened array format: [x, y, z, station_id]
+    # Distributed across warehouse storage areas
+    eject_stations: [
+      # Storage Area 1 (y=4-5, x=21-28) - 16 stations
+      21, 4, 0, 1,
+      22, 4, 0, 2,
+      23, 4, 0, 3,
+      24, 4, 0, 4,
+      25, 4, 0, 5,
+      26, 4, 0, 6,
+      27, 4, 0, 7,
+      28, 4, 0, 8,
+      21, 5, 0, 9,
+      22, 5, 0, 10,
+      23, 5, 0, 11,
+      24, 5, 0, 12,
+      25, 5, 0, 13,
+      26, 5, 0, 14,
+      27, 5, 0, 15,
+      28, 5, 0, 16,
+      # Storage Area 2 (y=14, x=21-32) - 12 stations
+      21, 14, 0, 17,
+      22, 14, 0, 18,
+      23, 14, 0, 19,
+      24, 14, 0, 20,
+      25, 14, 0, 21,
+      26, 14, 0, 22,
+      27, 14, 0, 23,
+      28, 14, 0, 24,
+      29, 14, 0, 25,
+      30, 14, 0, 26,
+      31, 14, 0, 27,
+      32, 14, 0, 28,
+      # Storage Area 3 (y=24, x=21-32) - 12 stations
+      21, 24, 0, 29,
+      22, 24, 0, 30,
+      23, 24, 0, 31,
+      24, 24, 0, 32,
+      25, 24, 0, 33,
+      26, 24, 0, 34,
+      27, 24, 0, 35,
+      28, 24, 0, 36,
+      29, 24, 0, 37,
+      30, 24, 0, 38,
+      31, 24, 0, 39,
+      32, 24, 0, 40,
+      # Storage Area 4 (y=36, x=26-37) - 12 stations
+      26, 36, 0, 41,
+      27, 36, 0, 42,
+      28, 36, 0, 43,
+      29, 36, 0, 44,
+      30, 36, 0, 45,
+      31, 36, 0, 46,
+      32, 36, 0, 47,
+      33, 36, 0, 48,
+      34, 36, 0, 49,
+      35, 36, 0, 50,
+      36, 36, 0, 51,
+      37, 36, 0, 52,
+      # Storage Area 5 (y=46-47, x=21-28) - 16 stations
+      21, 46, 0, 53,
+      22, 46, 0, 54,
+      23, 46, 0, 55,
+      24, 46, 0, 56,
+      25, 46, 0, 57,
+      26, 46, 0, 58,
+      27, 46, 0, 59,
+      28, 46, 0, 60,
+      21, 47, 0, 61,
+      22, 47, 0, 62,
+      23, 47, 0, 63,
+      24, 47, 0, 64,
+      25, 47, 0, 65,
+      26, 47, 0, 66,
+      27, 47, 0, 67,
+      28, 47, 0, 68,
+      # Storage Area 6 (y=54, x=21-32) - 12 stations
+      21, 54, 0, 69,
+      22, 54, 0, 70,
+      23, 54, 0, 71,
+      24, 54, 0, 72,
+      25, 54, 0, 73,
+      26, 54, 0, 74,
+      27, 54, 0, 75,
+      28, 54, 0, 76,
+      29, 54, 0, 77,
+      30, 54, 0, 78,
+      31, 54, 0, 79,
+      32, 54, 0, 80
+    ]
+    
+    # Energy / charging parameters
+    energy:
+      max_energy: 200                  # Larger warehouse needs more energy
+      charge_duration: 20              # Timesteps spent at charger per visit
+      charge_rate: 2                   # Energy units restored per charging timestep
+      charging_trigger_multiplier: 3.0 # Trigger charging when energy <= multiplier * dist_to_charger
+
+    # Charging stations - Dedicated docking cells inside the maintenance bay
+    # Flattened array format: [x, y, z, station_id]
+    # Located at x=54 (left edge of maintenance bay), accessible from x=53
+    # 12 stations for 12 agents so all can charge without corridor congestion
+    # Cells overwrite the obstacle marking, so no obstacle_regions change needed
+    charging_stations: [
+      54, 7, 0, 1,      # Charging Station 1
+      54, 11, 0, 2,     # Charging Station 2
+      54, 15, 0, 3,     # Charging Station 3
+      54, 19, 0, 4,     # Charging Station 4
+      54, 23, 0, 5,     # Charging Station 5
+      54, 27, 0, 6,     # Charging Station 6
+      54, 31, 0, 7,     # Charging Station 7
+      54, 35, 0, 8,     # Charging Station 8
+      54, 39, 0, 9,     # Charging Station 9
+      54, 43, 0, 10,    # Charging Station 10
+      54, 47, 0, 11,    # Charging Station 11
+      54, 51, 0, 12     # Charging Station 12
+    ]
+
+    # Visualization settings
+    visualization:
+      # Node visualization
+      node_scale: 0.12         # Smaller points for larger world
+      node_color: [0.0, 1.0, 0.0, 0.5]  # Green, semi-transparent
+      
+      # Edge visualization
+      edge_width: 0.03         # Thinner lines for larger world
+      edge_color: [0.0, 0.0, 1.0, 0.4]  # Blue, more transparent
+      
+      # Obstacle visualization
+      obstacle_scale: 0.95     # Slightly smaller for visual clarity
+      obstacle_color: [1.0, 0.0, 0.0, 0.9]  # Bright red
+      
+      # Agent visualization
+      agent_scale: 0.4         # Standard robot size
+      agent_color: [1.0, 0.0, 1.0, 1.0]   # Magenta for visibility
+      
+      # Induct station visualization (truck docking)
+      induct_station_scale: 1.0    # Prominent size for docking bays
+      induct_station_color: [0.0, 0.5, 1.0, 1.0]  # Light blue (entry points)
+      
+      # Eject station visualization (storage bins)
+      eject_station_scale: 0.8     # Prominent size for storage locations
+      eject_station_color: [1.0, 0.5, 0.0, 1.0]   # Orange (storage/exit points)
+      
+      # Charging station visualization
+      charging_station_scale: 0.9
+      charging_station_color: [0.0, 1.0, 0.5, 1.0]  # Green-teal (energy/charging)
+    
+    # Frame settings
+    frame_id: "map"
+    
+    # Topic names
+    topics:
+      nodes: "gridworld/nodes"
+      edges: "gridworld/edges"
+      obstacles: "gridworld/obstacles"
+      agents: "gridworld/agents"
+      induct_stations: "gridworld/induct_stations"
+      eject_stations: "gridworld/eject_stations"
+      charging_stations: "gridworld/charging_stations"
