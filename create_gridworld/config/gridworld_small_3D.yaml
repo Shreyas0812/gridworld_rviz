@@ -20,12 +20,12 @@ create_gridworld_node:
       16, 16, 0, 18, 18, 2   # Corner obstacle 2
     ]
     
-    # Agent positions - Flattened array format
-    # Each agent position: [x, y, z]
+    # Agent positions and IDs - Flattened array format
+    # Each agent: [x, y, z, agent_id]
     agent_positions: [
-      1, 1, 0,     # Agent 1
-      18, 18, 0,   # Agent 2
-      10, 1, 2     # Agent 3
+      1, 1, 0, 1,     # Agent 1
+      18, 18, 0, 2,   # Agent 2
+      10, 1, 2, 3     # Agent 3
     ]
 
     # Induct (entry) stations - Flattened array format
@@ -46,6 +46,20 @@ create_gridworld_node:
       5, 5, 3, 4        # Eject station 4 at level 3
     ]
     
+    # Energy / charging parameters
+    energy:
+      max_energy: 100
+      charge_duration: 20
+      charge_rate: 1
+      charging_trigger_multiplier: 3.0
+
+    # Charging stations - Flattened array format: [x, y, z, station_id]
+    # Ground-level stations on left and right edges
+    charging_stations: [
+      1, 10, 0, 1,     # Left edge, mid-height
+      19, 10, 0, 2     # Right edge, mid-height
+    ]
+
     # Visualization settings
     visualization:
       # Node visualization
@@ -71,6 +85,10 @@ create_gridworld_node:
       # Eject station visualization
       eject_station_scale: 0.8     # Good visibility in 3D
       eject_station_color: [1.0, 0.5, 0.0, 1.0]   # Orange, fully opaque
+      
+      # Charging station visualization
+      charging_station_scale: 0.7
+      charging_station_color: [0.0, 1.0, 0.5, 1.0]  # Green-teal
     
     # Frame settings
     frame_id: "map"
@@ -83,3 +101,4 @@ create_gridworld_node:
       agents: "gridworld/agents"
       induct_stations: "gridworld/induct_stations"
       eject_stations: "gridworld/eject_stations"
+      charging_stations: "gridworld/charging_stations"
