@@ -20,6 +20,10 @@ CreateGridWorldNode::CreateGridWorldNode() : Node("create_gridworld_node")
     // Add obstacles to grid
     grid_world_->addObstacleRegions(config_manager_->getObstacleRegions());
     
+    // Clear obstacle flag for charging station cells so they are traversable
+    // and not rendered as red obstacles (charging stations have their own markers)
+    grid_world_->clearObstacleCells(config_manager_->getChargingStations());
+    
     // Create subscriber for agent positions
     agent_position_sub_ = this->create_subscription<std_msgs::msg::Int64MultiArray>(
         "agent_position", 

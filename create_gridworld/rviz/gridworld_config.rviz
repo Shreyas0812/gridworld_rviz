@@ -120,6 +120,18 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /gridworld/eject_stations
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Charging
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /gridworld/charging_stations
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

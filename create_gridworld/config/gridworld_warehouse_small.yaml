@@ -163,6 +163,10 @@ create_gridworld_node:
       # Eject station visualization (storage bins)
       eject_station_scale: 0.8     # Prominent size for storage locations
       eject_station_color: [1.0, 0.5, 0.0, 1.0]   # Orange (storage/exit points)
+      
+      # Charging station visualization
+      charging_station_scale: 0.9      # Slightly smaller than induct/eject
+      charging_station_color: [0.0, 1.0, 0.5, 1.0]  # Green-teal (energy/charging)
     
     # Frame settings
     frame_id: "map"

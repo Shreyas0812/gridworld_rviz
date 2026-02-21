@@ -62,6 +62,15 @@ void GridWorld::setObstacle(int x, int y, int z, bool is_obstacle)
     nodes_[index].is_traversable = !is_obstacle;
 }
 
+void GridWorld::clearObstacleCells(const std::vector<std::vector<int64_t>>& positions)
+{
+    for (const auto& pos : positions) {
+        if (pos.size() < 3) continue;
+        setObstacle(pos[0], pos[1], pos[2], false);
+    }
+    computeNeighbors();
+}
+
 int GridWorld::getNodeIndex(int x, int y, int z) const
 {
     if (x < 0 || x >= grid_width_ || y < 0 || y >= grid_height_ || z < 0 || z >= grid_depth_)

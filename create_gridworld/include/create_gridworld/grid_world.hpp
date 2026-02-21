@@ -21,6 +21,7 @@ public:
     GridWorld(int width, int height, int depth, double resolution);
     
     void addObstacleRegions(const std::vector<std::vector<int64_t>>& regions);
+    void clearObstacleCells(const std::vector<std::vector<int64_t>>& positions);
     void setObstacle(int x, int y, int z, bool is_obstacle);
     int getNodeIndex(int x, int y, int z) const;
     const std::vector<GridNode>& getNodes() const { return nodes_; }
