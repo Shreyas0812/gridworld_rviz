@@ -41,8 +41,20 @@ ros2 launch create_gridworld create_gridworld.launch.py
 # Small Warehouse (30×30, 6 agents)
 ros2 launch create_gridworld create_gridworld.launch.py config_type:=warehouse_small
 
-# Large Warehouse (60×60, 12 agents)
+# Large Warehouse (60×60, 18 agents)
 ros2 launch create_gridworld create_gridworld.launch.py config_type:=warehouse_large
+
+# Kiva Pod Storage — medium scale (36×36, 100 agents) — Wurman et al. 2008
+ros2 launch create_gridworld create_gridworld.launch.py config_type:=kiva
+
+# Kiva Pod Storage — large scale (72×72, 200 agents) — Wurman et al. 2008
+ros2 launch create_gridworld create_gridworld.launch.py config_type:=kiva_large
+
+# MAPF Warehouse Benchmark (161×63, 470 agents) — Li et al. 2021 / Sturtevant 2012
+ros2 launch create_gridworld create_gridworld.launch.py config_type:=shelf_aisle
+
+# Cross-Dock Sortation Center (44×28, 50 agents) — Boysen et al. 2019
+ros2 launch create_gridworld create_gridworld.launch.py config_type:=crossdock
 
 # Small 2D World (30×30, good for testing)
 ros2 launch create_gridworld create_gridworld.launch.py config_type:=small_2D
@@ -70,8 +82,12 @@ ros2 launch trajectory_executor trajectory_executor.launch.py data_file:=my_traj
 
 | Configuration | Dimensions | Agents | Obstacles | Induct | Eject | Charging | Use Case | Publish Rate |
 |---------------|------------|--------|-----------|--------|-------|----------|----------|--------------|
-| `warehouse_small` | 30×30×1 | 6 | Walls + columns + bays | 8 | 38 | 6 | Small warehouse MAPF | 20 Hz |
-| `warehouse_large` | 60×60×1 | 12 | Walls + columns + bays | 12 | 80 | 12 | Large warehouse MAPF | 10 Hz |
+| `warehouse_small` | 30×30×1 | 6 | Walls + columns + bays | 8 | 38 | 6 | Small warehouse MAPF (baseline) | 20 Hz |
+| `warehouse_large` | 60×60×1 | 18 | Walls + columns + bays | 12 | 80 | 12 | Large warehouse MAPF (scalability) | 10 Hz |
+| `kiva` | 36×36×1 | 100 | Pod matrix + maintenance bay | 5 | 10 | 12 | Kiva-style pod storage, medium scale [[1]](#references) | 20 Hz |
+| `kiva_large` | 72×72×1 | 200 | Scaled pod matrix + maintenance bay | 5 | 10 | 12 | Kiva-style pod storage, large scale [[1]](#references) | 10 Hz |
+| `shelf_aisle` | 161×63×1 | 470 | 10 shelf rows × 5 segments + vertical aisles | 10 | 12 | 18 | MAPF benchmark `warehouse-10-20-10-2-1` [[2,3]](#references) | 5 Hz |
+| `crossdock` | 44×28×1 | 50 | Lane dividers + charging corner | 6 | 10 | 8 | Cross-dock sortation center [[4,5]](#references) | 20 Hz |
 | `small_2D` | 30×30×1 | 5 | Borders + 4 internal | 4 | 4 | — | 2D algorithm testing | 20 Hz |
 | `small_3D` | 20×20×5 | 3 | 3 block regions | 4 | 4 | — | 3D algorithm testing | 15 Hz |
 | `large_2D` | 150×150×1 | 10 | Complex maze structure | 8 | 8 | — | Large-scale 2D navigation | 3 Hz |
@@ -259,6 +275,30 @@ agent_id,x,y,z,timestep
 - **`visualization.*`**: Color (RGBA), scale, and size parameters per element type
 - **`topics.*`**: Custom topic names for each visualization element
 
+## References
+
+The three literature-based gridworld configurations are derived from the following works:
+
+[1] **Kiva Pod Storage** (`kiva`):
+Wurman, P.R., D'Andrea, R., & Mountz, M. (2008). "Coordinating Hundreds of Cooperative, Autonomous Vehicles in Warehouses." *AI Magazine*, 29(1), 9–19.
+https://doi.org/10.1609/aimag.v29i1.2082
+
+[2] **MAPF Warehouse Benchmark — layout** (`shelf_aisle`):
+Li, J., Tinka, A., Kiesel, S., Durham, J.W., Kumar, T.K.S., & Koenig, S. (2021). "Lifelong Multi-Agent Path Finding in Large-Scale Warehouses." *Proceedings of the 35th AAAI Conference on Artificial Intelligence (AAAI 2021)*.
+https://doi.org/10.1609/aaai.v35i13.17344
+
+[3] **MAPF Warehouse Benchmark — map suite** (`shelf_aisle`):
+Sturtevant, N.R. (2012). "Benchmarks for Grid-Based Pathfinding." *IEEE Transactions on Computational Intelligence and AI in Games*, 4(2), 144–148.
+https://doi.org/10.1109/TCIAIG.2012.2197499
+
+[4] **Cross-Dock Sortation Center — survey** (`crossdock`):
+Boysen, N., De Koster, R., & Weidinger, F. (2019). "Warehousing in the e-commerce era: A survey." *European Journal of Operational Research*, 277(2), 396–411.
+https://doi.org/10.1016/j.ejor.2018.08.023
+
+[5] **Cross-Dock Sortation Center — robotic fulfillment** (`crossdock`):
+Boysen, N., Briskorn, D., & Emde, S. (2017). "Parts-to-picker based order processing in a rack-moving mobile robots environment." *European Journal of Operational Research*, 262(2), 550–562.
+https://doi.org/10.1016/j.ejor.2017.03.053
+
 ## Package Structure
 
 ```
@@ -267,8 +307,12 @@ gridworld_rviz/
 │   ├── CMakeLists.txt
 │   ├── package.xml
 │   ├── config/
-│   │   ├── gridworld_warehouse_small.yaml
-│   │   ├── gridworld_warehouse_large.yaml
+│   │   ├── gridworld_warehouse_small.yaml    # Baseline warehouse (30×30)
+│   │   ├── gridworld_warehouse_large.yaml    # Scalability warehouse (60×60)
+│   │   ├── gridworld_kiva.yaml               # Kiva pod storage, 36×36, 100 agents [1]
+│   │   ├── gridworld_kiva_large.yaml         # Kiva pod storage, 72×72, 200 agents [1]
+│   │   ├── gridworld_shelf_aisle.yaml        # MAPF benchmark warehouse-10-20-10-2-1, 161×63, 470 agents [2,3]
+│   │   ├── gridworld_crossdock.yaml          # Cross-dock sortation center, 44×28, 50 agents [4,5]
 │   │   ├── gridworld_small_2D.yaml
 │   │   ├── gridworld_small_3D.yaml
 │   │   ├── gridworld_large_2D.yaml

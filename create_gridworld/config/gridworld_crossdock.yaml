@@ -1,0 +1,156 @@
+# Cross-Dock Sortation Center Configuration
+# Based on: Boysen, N., De Koster, R., & Weidinger, F. (2019).
+#   "Warehousing in the e-commerce era: A survey."
+#   European Journal of Operational Research, 277(2), 396-411.
+#   https://doi.org/10.1016/j.ejor.2018.08.023
+#
+# Also informed by: Boysen, N., Briskorn, D., & Emde, S. (2017).
+#   "Parts-to-picker based order processing in a rack-moving mobile robots environment."
+#   European Journal of Operational Research, 262(2), 550-562.
+#   https://doi.org/10.1016/j.ejor.2017.03.053
+#
+# Layout: Directional left-to-right flow. Items arrive at receiving docks (induct) on
+#   the left wall and are transferred directly to shipping docks (eject) on the right
+#   wall, with no long-term storage. Partial horizontal sorting-lane dividers in the
+#   center zone create 6 dedicated transfer lanes while preserving two crossing gaps
+#   per divider (at x=17-24 and x=31-37), allowing agents to switch lanes mid-floor.
+#   Intermediate staging eject stations at x=35 handle pre-dock consolidation.
+#   Charging area tucked in the top-right corner (maintenance bay).
+#   Agent count based on Boysen et al.'s modeled throughput of ~2-3 robots per lane.
+#
+# Grid: 44x28 | Agents: 50 | Induct: 6 | Eject: 10 | Charging: 8
+
+create_gridworld_node:
+  ros__parameters:
+    grid_width: 44
+    grid_height: 28
+    grid_depth: 1
+    grid_resolution: 1.0
+    publish_rate: 20.0
+
+    obstacle_regions: [
+      # Perimeter walls
+      0, 0, 0, 43, 1, 0,         # Bottom border
+      0, 26, 0, 43, 27, 0,       # Top border
+      0,  0, 0,  1, 27, 0,       # Left border
+      42, 0, 0, 43, 27, 0,       # Right border
+
+      # Maintenance / charging bay (top-right corner, accessible from x=37 or y=21)
+      38, 22, 0, 41, 25, 0,      # Maintenance bay area (extended to y=22-25)
+
+      # Sorting-lane dividers: partial horizontal barriers separating 6 transfer lanes
+      # Lanes centered at y=3, 7, 11, 15, 19, 23
+      # Dividers at y=5, 9, 13, 17, 21 (midpoints between lanes)
+      # Left segment: x=12-16 | Crossing gap: x=17-24 | Right segment: x=25-30
+      # Second gap: x=31-37 (clear path toward staging/right docks)
+      12,  5, 0, 16,  5, 0,      # Divider 1 left segment  (lanes 1-2)
+      25,  5, 0, 30,  5, 0,      # Divider 1 right segment
+      12,  9, 0, 16,  9, 0,      # Divider 2 left segment  (lanes 2-3)
+      25,  9, 0, 30,  9, 0,      # Divider 2 right segment
+      12, 13, 0, 16, 13, 0,      # Divider 3 left segment  (lanes 3-4)
+      25, 13, 0, 30, 13, 0,      # Divider 3 right segment
+      12, 17, 0, 16, 17, 0,      # Divider 4 left segment  (lanes 4-5)
+      25, 17, 0, 30, 17, 0,      # Divider 4 right segment
+      12, 21, 0, 16, 21, 0,      # Divider 5 left segment  (lanes 5-6)
+      25, 21, 0, 30, 21, 0       # Divider 5 right segment
+    ]
+
+    # Agent positions: [x, y, z, agent_id]
+    # 50 agents: 8 x-positions × 6 lanes + 2 extras
+    # Lanes at y=3,7,11,15,19,23  |  x-columns: receiving(6,9,12) gap1(20) gap2(25,32) staging(35,38)
+    # Note: x=38 agents shifted to y=21 on lane 6 to avoid maintenance bay (y=22-25)
+    agent_positions: [
+      # x=6 (receiving side, all 6 lanes)
+       6,  3, 0,  1,   6,  7, 0,  2,   6, 11, 0,  3,   6, 15, 0,  4,   6, 19, 0,  5,   6, 23, 0,  6,
+      # x=9 (left floor section, all 6 lanes)
+       9,  3, 0,  7,   9,  7, 0,  8,   9, 11, 0,  9,   9, 15, 0, 10,   9, 19, 0, 11,   9, 23, 0, 12,
+      # x=12 (before divider gap, passable at lane centers, all 6 lanes)
+      12,  3, 0, 13,  12,  7, 0, 14,  12, 11, 0, 15,  12, 15, 0, 16,  12, 19, 0, 17,  12, 23, 0, 18,
+      # x=20 (crossing gap 1, all 6 lanes)
+      20,  3, 0, 19,  20,  7, 0, 20,  20, 11, 0, 21,  20, 15, 0, 22,  20, 19, 0, 23,  20, 23, 0, 24,
+      # x=25 (right of crossing gap 1, passable at lane centers, all 6 lanes)
+      25,  3, 0, 25,  25,  7, 0, 26,  25, 11, 0, 27,  25, 15, 0, 28,  25, 19, 0, 29,  25, 23, 0, 30,
+      # x=32 (crossing gap 2, all 6 lanes)
+      32,  3, 0, 31,  32,  7, 0, 32,  32, 11, 0, 33,  32, 15, 0, 34,  32, 19, 0, 35,  32, 23, 0, 36,
+      # x=35 (pre-dock staging, all 6 lanes)
+      35,  3, 0, 37,  35,  7, 0, 38,  35, 11, 0, 39,  35, 15, 0, 40,  35, 19, 0, 41,  35, 23, 0, 42,
+      # x=38 (near shipping docks; lane 6 at y=21 to avoid maintenance bay obstacle y=22-25)
+      38,  3, 0, 43,  38,  7, 0, 44,  38, 11, 0, 45,  38, 15, 0, 46,  38, 19, 0, 47,  38, 21, 0, 48,
+      # Two additional agents to reach 50
+      15,  3, 0, 49,             # Left-side divider zone, lane 1
+      28, 23, 0, 50              # Right-side divider zone, lane 6
+    ]
+
+    # Induct stations: left-wall receiving docks (truck arrival)
+    # [x, y, z, station_id]
+    induct_stations: [
+      2,  3, 0, 1,               # Receiving Dock 1 (lane 1)
+      2,  7, 0, 2,               # Receiving Dock 2 (lane 2)
+      2, 11, 0, 3,               # Receiving Dock 3 (lane 3)
+      2, 15, 0, 4,               # Receiving Dock 4 (lane 4)
+      2, 19, 0, 5,               # Receiving Dock 5 (lane 5)
+      2, 23, 0, 6                # Receiving Dock 6 (lane 6)
+    ]
+
+    # Eject stations: right-wall shipping docks + pre-dock staging areas
+    # [x, y, z, station_id]
+    eject_stations: [
+      # Right-wall shipping docks (truck departure)
+      40,  3, 0, 1,              # Shipping Dock 1 (lane 1)
+      40,  7, 0, 2,              # Shipping Dock 2 (lane 2)
+      40, 11, 0, 3,              # Shipping Dock 3 (lane 3)
+      40, 15, 0, 4,              # Shipping Dock 4 (lane 4)
+      40, 19, 0, 5,              # Shipping Dock 5 (lane 5)
+      40, 23, 0, 6,              # Shipping Dock 6 (lane 6)
+      # Pre-dock staging areas (x=35, consolidation before loading)
+      35,  3, 0, 7,              # Staging Area 1
+      35,  7, 0, 8,              # Staging Area 2
+      35, 11, 0, 9,              # Staging Area 3
+      35, 15, 0, 10              # Staging Area 4
+    ]
+
+    energy:
+      max_energy: 90
+      charge_duration: 20
+      charge_rate: 1
+      charging_trigger_multiplier: 3.0
+
+    # Charging stations in top-right maintenance bay (2x4 grid of cells)
+    # Cells overwrite obstacle marking, accessible from x=37 or y=21
+    charging_stations: [
+      38, 22, 0, 1,
+      39, 22, 0, 2,
+      38, 23, 0, 3,
+      39, 23, 0, 4,
+      38, 24, 0, 5,
+      39, 24, 0, 6,
+      38, 25, 0, 7,
+      39, 25, 0, 8
+    ]
+
+    visualization:
+      node_scale: 0.15
+      node_color: [0.0, 1.0, 0.0, 0.7]
+      edge_width: 0.05
+      edge_color: [0.0, 0.0, 1.0, 0.6]
+      obstacle_scale: 0.95
+      obstacle_color: [1.0, 0.0, 0.0, 0.9]
+      agent_scale: 0.4
+      agent_color: [1.0, 0.0, 1.0, 1.0]
+      induct_station_scale: 1.0
+      induct_station_color: [0.0, 0.5, 1.0, 1.0]
+      eject_station_scale: 0.8
+      eject_station_color: [1.0, 0.5, 0.0, 1.0]
+      charging_station_scale: 0.9
+      charging_station_color: [0.0, 1.0, 0.5, 1.0]
+
+    frame_id: "map"
+
+    topics:
+      nodes: "gridworld/nodes"
+      edges: "gridworld/edges"
+      obstacles: "gridworld/obstacles"
+      agents: "gridworld/agents"
+      induct_stations: "gridworld/induct_stations"
+      eject_stations: "gridworld/eject_stations"
+      charging_stations: "gridworld/charging_stations"

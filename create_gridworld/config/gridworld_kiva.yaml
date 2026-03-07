@@ -1,0 +1,184 @@
+# Kiva-Style Pod Storage Warehouse Configuration
+# Based on: Wurman, P.R., D'Andrea, R., & Mountz, M. (2008).
+#   "Coordinating Hundreds of Cooperative, Autonomous Vehicles in Warehouses."
+#   AI Magazine, 29(1), 9-19. https://doi.org/10.1609/aimag.v29i1.2082
+#
+# Layout: Central 4x5 matrix of movable shelf pods (2x2 cells each).
+#   Agents navigate 3-cell vertical aisles and 4-cell horizontal aisles between pods.
+#   Inventory arrives at left-wall truck docks (induct) and is picked at top/bottom
+#   highway workstations (eject), matching the Kiva pod-retrieval workflow.
+#   Maintenance bay on right side. Agent count scaled from Wurman et al.'s
+#   reported density of ~100-150 robots per facility.
+#
+# Grid: 36x36 | Agents: 100 | Induct: 5 | Eject: 10 | Charging: 12
+
+create_gridworld_node:
+  ros__parameters:
+    grid_width: 36
+    grid_height: 36
+    grid_depth: 1
+    grid_resolution: 1.0
+    publish_rate: 20.0
+
+    obstacle_regions: [
+      # Perimeter walls
+      0, 0, 0, 35, 1, 0,         # Bottom border
+      0, 34, 0, 35, 35, 0,       # Top border
+      0, 0, 0, 1, 35, 0,         # Left border
+      34, 0, 0, 35, 35, 0,       # Right border
+
+      # Maintenance bay (right side, accessible from x=31)
+      32, 5, 0, 33, 30, 0,       # Maintenance bay area
+
+      # Pod matrix: 4 rows x 5 columns of 2x2 shelf pods
+      # Pod columns centered at x=9,14,19,24,29  (5-cell spacing -> 3-cell vertical aisles)
+      # Pod rows    centered at y=8,14,20,26      (6-cell spacing -> 4-cell horizontal aisles)
+      # Left highway (truck access): x=2-7
+      # Top/bottom highways (picking):  y=2-5 and y=30-33
+
+      # Pod row 1 (y=8-9)
+      9,  8, 0, 10,  9, 0,       # Pod (1,1)
+      14,  8, 0, 15,  9, 0,      # Pod (1,2)
+      19,  8, 0, 20,  9, 0,      # Pod (1,3)
+      24,  8, 0, 25,  9, 0,      # Pod (1,4)
+      29,  8, 0, 30,  9, 0,      # Pod (1,5)
+
+      # Pod row 2 (y=14-15)
+      9, 14, 0, 10, 15, 0,       # Pod (2,1)
+      14, 14, 0, 15, 15, 0,      # Pod (2,2)
+      19, 14, 0, 20, 15, 0,      # Pod (2,3)
+      24, 14, 0, 25, 15, 0,      # Pod (2,4)
+      29, 14, 0, 30, 15, 0,      # Pod (2,5)
+
+      # Pod row 3 (y=20-21)
+      9, 20, 0, 10, 21, 0,       # Pod (3,1)
+      14, 20, 0, 15, 21, 0,      # Pod (3,2)
+      19, 20, 0, 20, 21, 0,      # Pod (3,3)
+      24, 20, 0, 25, 21, 0,      # Pod (3,4)
+      29, 20, 0, 30, 21, 0,      # Pod (3,5)
+
+      # Pod row 4 (y=26-27)
+      9, 26, 0, 10, 27, 0,       # Pod (4,1)
+      14, 26, 0, 15, 27, 0,      # Pod (4,2)
+      19, 26, 0, 20, 27, 0,      # Pod (4,3)
+      24, 26, 0, 25, 27, 0,      # Pod (4,4)
+      29, 26, 0, 30, 27, 0       # Pod (4,5)
+    ]
+
+    # Agent positions: [x, y, z, agent_id]
+    # 100 agents (~11% of passable cells) distributed across all navigable zones:
+    #   Left highway (x=5): 10 | Horizontal aisles (y=11,17,23): 30 | Pod-row vertical aisles: 48
+    #   Top highway: 8 | Bottom area: 4
+    # Passable x within pod rows: {8, 11,12,13, 16,17,18, 21,22,23, 26,27,28, 31}
+    agent_positions: [
+      # Left highway (x=5), spaced through full height
+       5,  6, 0,  1,   5,  8, 0,  2,   5, 11, 0,  3,   5, 14, 0,  4,   5, 17, 0,  5,
+       5, 20, 0,  6,   5, 23, 0,  7,   5, 26, 0,  8,   5, 29, 0,  9,   5, 32, 0, 10,
+      # Aisle between pod rows 1-2 (y=11): 10 agents across passable x columns
+       8, 11, 0, 11,  11, 11, 0, 12,  13, 11, 0, 13,  16, 11, 0, 14,  18, 11, 0, 15,
+      21, 11, 0, 16,  23, 11, 0, 17,  26, 11, 0, 18,  28, 11, 0, 19,  31, 11, 0, 20,
+      # Aisle between pod rows 2-3 (y=17): 10 agents
+       8, 17, 0, 21,  11, 17, 0, 22,  13, 17, 0, 23,  16, 17, 0, 24,  18, 17, 0, 25,
+      21, 17, 0, 26,  23, 17, 0, 27,  26, 17, 0, 28,  28, 17, 0, 29,  31, 17, 0, 30,
+      # Aisle between pod rows 3-4 (y=23): 10 agents
+       8, 23, 0, 31,  11, 23, 0, 32,  13, 23, 0, 33,  16, 23, 0, 34,  18, 23, 0, 35,
+      21, 23, 0, 36,  23, 23, 0, 37,  26, 23, 0, 38,  28, 23, 0, 39,  31, 23, 0, 40,
+      # Pod row 1 vertical aisles (y=8): x positions between/beside pod columns
+       8,  8, 0, 41,  12,  8, 0, 42,  17,  8, 0, 43,  22,  8, 0, 44,  27,  8, 0, 45,  31,  8, 0, 46,
+      # Pod row 1 (y=9)
+       8,  9, 0, 47,  12,  9, 0, 48,  17,  9, 0, 49,  22,  9, 0, 50,  27,  9, 0, 51,  31,  9, 0, 52,
+      # Pod row 2 vertical aisles (y=14)
+       8, 14, 0, 53,  12, 14, 0, 54,  17, 14, 0, 55,  22, 14, 0, 56,  27, 14, 0, 57,  31, 14, 0, 58,
+      # Pod row 2 (y=15)
+       8, 15, 0, 59,  12, 15, 0, 60,  17, 15, 0, 61,  22, 15, 0, 62,  27, 15, 0, 63,  31, 15, 0, 64,
+      # Pod row 3 vertical aisles (y=20)
+       8, 20, 0, 65,  12, 20, 0, 66,  17, 20, 0, 67,  22, 20, 0, 68,  27, 20, 0, 69,  31, 20, 0, 70,
+      # Pod row 3 (y=21)
+       8, 21, 0, 71,  12, 21, 0, 72,  17, 21, 0, 73,  22, 21, 0, 74,  27, 21, 0, 75,  31, 21, 0, 76,
+      # Pod row 4 vertical aisles (y=26)
+       8, 26, 0, 77,  12, 26, 0, 78,  17, 26, 0, 79,  22, 26, 0, 80,  27, 26, 0, 81,  31, 26, 0, 82,
+      # Pod row 4 (y=27)
+       8, 27, 0, 83,  12, 27, 0, 84,  17, 27, 0, 85,  22, 27, 0, 86,  27, 27, 0, 87,  31, 27, 0, 88,
+      # Top highway (y=30,31): aligned with pod columns and aisles
+       9, 30, 0, 89,  14, 30, 0, 90,  19, 30, 0, 91,  24, 30, 0, 92,  29, 30, 0, 93,
+       9, 31, 0, 94,  14, 31, 0, 95,  19, 31, 0, 96,
+      # Bottom area (y=4): aligned with pod columns
+       9,  4, 0, 97,  14,  4, 0, 98,  19,  4, 0, 99,  24,  4, 0, 100
+    ]
+
+    # Induct stations: left-wall truck docks (inventory arrival)
+    # [x, y, z, station_id]
+    induct_stations: [
+      2,  6, 0, 1,               # Induct/Dock 1
+      2, 12, 0, 2,               # Induct/Dock 2
+      2, 18, 0, 3,               # Induct/Dock 3
+      2, 24, 0, 4,               # Induct/Dock 4
+      2, 30, 0, 5                # Induct/Dock 5
+    ]
+
+    # Eject stations: top and bottom highway picking/packing workstations
+    # [x, y, z, station_id]
+    eject_stations: [
+      # Top highway workstations (y=32), aligned with pod columns
+      9,  32, 0, 1,
+      14, 32, 0, 2,
+      19, 32, 0, 3,
+      24, 32, 0, 4,
+      29, 32, 0, 5,
+      # Bottom highway workstations (y=4), aligned with pod columns
+      9,   4, 0, 6,
+      14,  4, 0, 7,
+      19,  4, 0, 8,
+      24,  4, 0, 9,
+      29,  4, 0, 10
+    ]
+
+    energy:
+      max_energy: 80
+      charge_duration: 20
+      charge_rate: 1
+      charging_trigger_multiplier: 3.0
+
+    # Charging stations inside maintenance bay (x=32), 2-cell spacing, 12 stations
+    # Cells overwrite obstacle marking, accessible from x=31
+    charging_stations: [
+      32,  6, 0,  1,
+      32,  8, 0,  2,
+      32, 10, 0,  3,
+      32, 12, 0,  4,
+      32, 14, 0,  5,
+      32, 16, 0,  6,
+      32, 18, 0,  7,
+      32, 20, 0,  8,
+      32, 22, 0,  9,
+      32, 24, 0, 10,
+      32, 26, 0, 11,
+      32, 28, 0, 12
+    ]
+
+    visualization:
+      node_scale: 0.15
+      node_color: [0.0, 1.0, 0.0, 0.7]
+      edge_width: 0.05
+      edge_color: [0.0, 0.0, 1.0, 0.6]
+      obstacle_scale: 0.95
+      obstacle_color: [1.0, 0.0, 0.0, 0.9]
+      agent_scale: 0.4
+      agent_color: [1.0, 0.0, 1.0, 1.0]
+      induct_station_scale: 1.0
+      induct_station_color: [0.0, 0.5, 1.0, 1.0]
+      eject_station_scale: 0.8
+      eject_station_color: [1.0, 0.5, 0.0, 1.0]
+      charging_station_scale: 0.9
+      charging_station_color: [0.0, 1.0, 0.5, 1.0]
+
+    frame_id: "map"
+
+    topics:
+      nodes: "gridworld/nodes"
+      edges: "gridworld/edges"
+      obstacles: "gridworld/obstacles"
+      agents: "gridworld/agents"
+      induct_stations: "gridworld/induct_stations"
+      eject_stations: "gridworld/eject_stations"
+      charging_stations: "gridworld/charging_stations"

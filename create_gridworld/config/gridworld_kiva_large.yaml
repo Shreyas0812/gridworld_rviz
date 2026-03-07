@@ -1,0 +1,207 @@
+# Kiva-Style Pod Storage Warehouse — Large Configuration
+# Based on: Wurman, P.R., D'Andrea, R., & Mountz, M. (2008).
+#   "Coordinating Hundreds of Cooperative, Autonomous Vehicles in Warehouses."
+#   AI Magazine, 29(1), 9-19. https://doi.org/10.1609/aimag.v29i1.2082
+#
+# Layout: 2x scaled version of gridworld_kiva.yaml. Central 4x5 matrix of 4x4 shelf pods.
+#   Agents navigate 6-cell vertical aisles and 8-cell horizontal aisles between pods.
+#   Left-wall induct (truck docks), top/bottom highway eject (picking stations).
+#   Maintenance bay on right side (x=64-67, accessible from x=63). Left highway x=2..9.
+#   200 agents at ~7% passable-cell density — representative of Staples-scale Kiva facilities
+#   (500 robots / 30,000 m²) while remaining computationally tractable.
+#
+# Grid: 72x72 | Agents: 200 | Induct: 5 | Eject: 10 | Charging: 12
+#
+# Pod matrix (4 rows x 5 columns, each pod 4x4 cells, 10-cell column spacing):
+#   Columns at x=18-21, 28-31, 38-41, 48-51, 58-61
+#   Rows    at y=16-19, 28-31, 40-43, 52-55
+# Passable vertical aisle centers:  x=14, 24, 34, 44, 54, 62
+# Passable horizontal aisle centers: y=22, 34, 46
+# Left highway: x=2-9  |  Top highway: y=58-67  |  Bottom area: y=4-14
+
+create_gridworld_node:
+  ros__parameters:
+    grid_width: 72
+    grid_height: 72
+    grid_depth: 1
+    grid_resolution: 1.0
+    publish_rate: 10.0
+
+    obstacle_regions: [
+      # Perimeter walls (2-cell thick)
+      0,  0, 0, 71,  1, 0,       # Bottom border
+      0, 70, 0, 71, 71, 0,       # Top border
+      0,  0, 0,  1, 71, 0,       # Left border
+      70, 0, 0, 71, 71, 0,       # Right border
+
+      # Maintenance bay (right side, x=64-67, accessible from x=63)
+      64, 10, 0, 67, 60, 0,
+
+      # Pod row 1 (y=16-19): 5 pods, each 4x4 cells
+      18, 16, 0, 21, 19, 0,      # Pod (1,1)
+      28, 16, 0, 31, 19, 0,      # Pod (1,2)
+      38, 16, 0, 41, 19, 0,      # Pod (1,3)
+      48, 16, 0, 51, 19, 0,      # Pod (1,4)
+      58, 16, 0, 61, 19, 0,      # Pod (1,5)
+
+      # Pod row 2 (y=28-31)
+      18, 28, 0, 21, 31, 0,      # Pod (2,1)
+      28, 28, 0, 31, 31, 0,      # Pod (2,2)
+      38, 28, 0, 41, 31, 0,      # Pod (2,3)
+      48, 28, 0, 51, 31, 0,      # Pod (2,4)
+      58, 28, 0, 61, 31, 0,      # Pod (2,5)
+
+      # Pod row 3 (y=40-43)
+      18, 40, 0, 21, 43, 0,      # Pod (3,1)
+      28, 40, 0, 31, 43, 0,      # Pod (3,2)
+      38, 40, 0, 41, 43, 0,      # Pod (3,3)
+      48, 40, 0, 51, 43, 0,      # Pod (3,4)
+      58, 40, 0, 61, 43, 0,      # Pod (3,5)
+
+      # Pod row 4 (y=52-55)
+      18, 52, 0, 21, 55, 0,      # Pod (4,1)
+      28, 52, 0, 31, 55, 0,      # Pod (4,2)
+      38, 52, 0, 41, 55, 0,      # Pod (4,3)
+      48, 52, 0, 51, 55, 0,      # Pod (4,4)
+      58, 52, 0, 61, 55, 0       # Pod (4,5)
+    ]
+
+    # Agent positions: [x, y, z, agent_id]
+    # 200 agents (~7% of passable cells) matching Staples-scale Kiva facility density.
+    # Passable x in pod rows: {10..17, 22..27, 32..37, 42..47, 52..57, 62..63}
+    # Key x positions used: 6(left hw), 14, 24, 34, 44, 54, 62 (aisle centers)
+    agent_positions: [
+      # Left highway (x=6), spaced along full height
+       6, 12, 0,  1,   6, 16, 0,  2,   6, 22, 0,  3,   6, 28, 0,  4,
+       6, 34, 0,  5,   6, 40, 0,  6,   6, 46, 0,  7,   6, 52, 0,  8,
+       6, 58, 0,  9,   6, 64, 0, 10,
+      # Left highway (x=3), pod-row levels
+       3, 16, 0, 11,   3, 28, 0, 12,   3, 40, 0, 13,   3, 52, 0, 14,
+      # Aisle between pod rows 1-2 (y=20-27): agents at y=22 and y=25
+      14, 22, 0, 15,  24, 22, 0, 16,  34, 22, 0, 17,  44, 22, 0, 18,  54, 22, 0, 19,  62, 22, 0, 20,
+      14, 25, 0, 21,  24, 25, 0, 22,  34, 25, 0, 23,  44, 25, 0, 24,  54, 25, 0, 25,  62, 25, 0, 26,
+      # Aisle between pod rows 2-3 (y=32-39): agents at y=34 and y=37
+      14, 34, 0, 27,  24, 34, 0, 28,  34, 34, 0, 29,  44, 34, 0, 30,  54, 34, 0, 31,  62, 34, 0, 32,
+      14, 37, 0, 33,  24, 37, 0, 34,  34, 37, 0, 35,  44, 37, 0, 36,  54, 37, 0, 37,  62, 37, 0, 38,
+      # Aisle between pod rows 3-4 (y=44-51): agents at y=46 and y=49
+      14, 46, 0, 39,  24, 46, 0, 40,  34, 46, 0, 41,  44, 46, 0, 42,  54, 46, 0, 43,  62, 46, 0, 44,
+      14, 49, 0, 45,  24, 49, 0, 46,  34, 49, 0, 47,  44, 49, 0, 48,  54, 49, 0, 49,  62, 49, 0, 50,
+      # Pod row 1 vertical aisles (y=17, mid-pod): x at aisle centers
+      14, 17, 0, 51,  24, 17, 0, 52,  34, 17, 0, 53,  44, 17, 0, 54,  54, 17, 0, 55,  62, 17, 0, 56,
+      # Pod row 1 (y=18)
+      14, 18, 0, 57,  24, 18, 0, 58,  34, 18, 0, 59,  44, 18, 0, 60,  54, 18, 0, 61,  62, 18, 0, 62,
+      # Pod row 2 vertical aisles (y=29)
+      14, 29, 0, 63,  24, 29, 0, 64,  34, 29, 0, 65,  44, 29, 0, 66,  54, 29, 0, 67,  62, 29, 0, 68,
+      # Pod row 2 (y=30)
+      14, 30, 0, 69,  24, 30, 0, 70,  34, 30, 0, 71,  44, 30, 0, 72,  54, 30, 0, 73,  62, 30, 0, 74,
+      # Pod row 3 vertical aisles (y=41)
+      14, 41, 0, 75,  24, 41, 0, 76,  34, 41, 0, 77,  44, 41, 0, 78,  54, 41, 0, 79,  62, 41, 0, 80,
+      # Pod row 4 vertical aisles (y=53)
+      14, 53, 0, 81,  24, 53, 0, 82,  34, 53, 0, 83,  44, 53, 0, 84,  54, 53, 0, 85,  62, 53, 0, 86,
+      # Top highway (y=58-66)
+      18, 60, 0, 87,  28, 60, 0, 88,  38, 60, 0, 89,  48, 60, 0, 90,  58, 60, 0, 91,
+      18, 62, 0, 92,  28, 62, 0, 93,  38, 62, 0, 94,  48, 62, 0, 95,  58, 62, 0, 96,
+      14, 64, 0, 97,  24, 64, 0, 98,  34, 64, 0, 99,  44, 64, 0,100,
+      18, 66, 0,101,  28, 66, 0,102,  38, 66, 0,103,  48, 66, 0,104,  58, 66, 0,105,
+      # Bottom area (y=4-14)
+      18,  6, 0,106,  28,  6, 0,107,  38,  6, 0,108,  48,  6, 0,109,  58,  6, 0,110,
+      18,  8, 0,111,  28,  8, 0,112,  38,  8, 0,113,  48,  8, 0,114,  58,  8, 0,115,
+      14, 10, 0,116,  24, 10, 0,117,  34, 10, 0,118,  44, 10, 0,119,  54, 10, 0,120,
+      18, 12, 0,121,  28, 12, 0,122,  38, 12, 0,123,  48, 12, 0,124,
+      28,  4, 0,125,  38,  4, 0,126,  48,  4, 0,127,
+      # Additional aisle fill to reach 200
+      14, 20, 0,128,  24, 20, 0,129,  34, 20, 0,130,  44, 20, 0,131,  54, 20, 0,132,
+      14, 32, 0,133,  24, 32, 0,134,  34, 32, 0,135,  44, 32, 0,136,  54, 32, 0,137,
+      14, 44, 0,138,  24, 44, 0,139,  34, 44, 0,140,  44, 44, 0,141,  54, 44, 0,142,
+      18, 68, 0,143,  28, 68, 0,144,  38, 68, 0,145,  48, 68, 0,146,  58, 68, 0,147,
+      14, 57, 0,148,  24, 57, 0,149,  34, 57, 0,150,  44, 57, 0,151,  54, 57, 0,152,
+      14, 14, 0,153,  24, 14, 0,154,  34, 14, 0,155,  44, 14, 0,156,
+       6,  8, 0,157,   6, 24, 0,158,   6, 30, 0,159,   6, 36, 0,160,
+       6, 42, 0,161,   6, 48, 0,162,   6, 54, 0,163,   6, 60, 0,164,
+      14, 26, 0,165,  14, 27, 0,166,  62, 26, 0,167,  62, 27, 0,168,
+      14, 38, 0,169,  14, 39, 0,170,  62, 38, 0,171,  62, 39, 0,172,
+      14, 50, 0,173,  14, 51, 0,174,  62, 50, 0,175,  62, 51, 0,176,
+      24, 26, 0,177,  34, 26, 0,178,  44, 26, 0,179,  54, 26, 0,180,
+      24, 38, 0,181,  34, 38, 0,182,  44, 38, 0,183,  54, 38, 0,184,
+      24, 50, 0,185,  34, 50, 0,186,  44, 50, 0,187,  54, 50, 0,188,
+      22, 17, 0,189,  32, 17, 0,190,  42, 17, 0,191,  52, 17, 0,192,
+      22, 29, 0,193,  32, 29, 0,194,  42, 29, 0,195,  52, 29, 0,196,
+      22, 41, 0,197,  32, 41, 0,198,  42, 41, 0,199,  52, 53, 0,200
+    ]
+
+    # Induct stations: left-wall truck docks (2x scaled from kiva.yaml)
+    # [x, y, z, station_id]
+    induct_stations: [
+      4, 12, 0, 1,               # Dock 1
+      4, 24, 0, 2,               # Dock 2
+      4, 36, 0, 3,               # Dock 3
+      4, 48, 0, 4,               # Dock 4
+      4, 60, 0, 5                # Dock 5
+    ]
+
+    # Eject stations: top and bottom highway picking workstations
+    # [x, y, z, station_id]
+    eject_stations: [
+      # Top highway (y=64), aligned with pod columns
+      18, 64, 0,  1,
+      28, 64, 0,  2,
+      38, 64, 0,  3,
+      48, 64, 0,  4,
+      58, 64, 0,  5,
+      # Bottom highway (y=8), aligned with pod columns
+      18,  8, 0,  6,
+      28,  8, 0,  7,
+      38,  8, 0,  8,
+      48,  8, 0,  9,
+      58,  8, 0, 10
+    ]
+
+    energy:
+      max_energy: 120
+      charge_duration: 30
+      charge_rate: 1
+      charging_trigger_multiplier: 3.0
+
+    # Charging stations inside maintenance bay (x=64), 4-cell spacing, 12 stations
+    # Cells overwrite obstacle marking, accessible from x=63
+    charging_stations: [
+      64, 12, 0,  1,
+      64, 16, 0,  2,
+      64, 20, 0,  3,
+      64, 24, 0,  4,
+      64, 28, 0,  5,
+      64, 32, 0,  6,
+      64, 36, 0,  7,
+      64, 40, 0,  8,
+      64, 44, 0,  9,
+      64, 48, 0, 10,
+      64, 52, 0, 11,
+      64, 56, 0, 12
+    ]
+
+    visualization:
+      node_scale: 0.12
+      node_color: [0.0, 1.0, 0.0, 0.7]
+      edge_width: 0.04
+      edge_color: [0.0, 0.0, 1.0, 0.6]
+      obstacle_scale: 0.95
+      obstacle_color: [1.0, 0.0, 0.0, 0.9]
+      agent_scale: 0.35
+      agent_color: [1.0, 0.0, 1.0, 1.0]
+      induct_station_scale: 0.9
+      induct_station_color: [0.0, 0.5, 1.0, 1.0]
+      eject_station_scale: 0.8
+      eject_station_color: [1.0, 0.5, 0.0, 1.0]
+      charging_station_scale: 0.8
+      charging_station_color: [0.0, 1.0, 0.5, 1.0]
+
+    frame_id: "map"
+
+    topics:
+      nodes: "gridworld/nodes"
+      edges: "gridworld/edges"
+      obstacles: "gridworld/obstacles"
+      agents: "gridworld/agents"
+      induct_stations: "gridworld/induct_stations"
+      eject_stations: "gridworld/eject_stations"
+      charging_stations: "gridworld/charging_stations"
