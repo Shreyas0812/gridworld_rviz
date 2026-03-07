@@ -1,6 +1,6 @@
 # Large Warehouse 2D Gridworld Configuration Parameters
 # Scenario: Large automated warehouse with truck docking (induct) and storage bins (eject)
-# Grid: 60x60, 12 agents, 12 induct stations, 80 eject stations, 12 charging stations
+# Grid: 60x60, 18 agents, 12 induct stations, 80 eject stations, 12 charging stations
 create_gridworld_node:
   ros__parameters:
     # Grid dimensions - Large 2D warehouse floor plan
@@ -50,43 +50,52 @@ create_gridworld_node:
       54, 5, 0, 55, 54, 0,      # Maintenance bay area
       
       # Dividers between induct stations (prevent cross-contamination)
-      2, 9, 0, 7, 10, 0,        # Divider between induct stations 1-2
-      2, 17, 0, 7, 18, 0,       # Divider between induct stations 2-3
-      2, 25, 0, 7, 26, 0,       # Divider between induct stations 3-4
-      2, 33, 0, 7, 34, 0,       # Divider between induct stations 4-5
-      2, 41, 0, 7, 42, 0,       # Divider between induct stations 5-6
-      2, 49, 0, 7, 50, 0        # Divider between induct stations 6-7
+      2, 8, 0, 7, 9, 0,         # Divider between induct stations 1-2
+      2, 15, 0, 7, 16, 0,       # Divider between induct stations 2-3
+      2, 22, 0, 7, 23, 0,       # Divider between induct stations 3-4
+      2, 29, 0, 7, 30, 0,       # Divider between induct stations 4-5
+      2, 36, 0, 7, 37, 0,       # Divider between induct stations 5-6
+      2, 43, 0, 7, 44, 0,       # Divider between induct stations 6-7
+      2, 50, 0, 7, 51, 0        # Divider between induct stations 7-8
     ]
     
     # Agent positions and IDs - Flattened array format
     # Each agent: [x, y, z, agent_id]
     agent_positions: [
-      8, 5, 0, 1,       # Agent 1 (near induct zone)
-      8, 13, 0, 2,      # Agent 2 (near induct zone)
-      8, 21, 0, 3,      # Agent 3 (near induct zone)
-      8, 29, 0, 4,      # Agent 4 (near induct zone)
-      8, 37, 0, 5,      # Agent 5 (near induct zone)
-      8, 45, 0, 6,      # Agent 6 (near induct zone)
-      36, 10, 0, 7,     # Agent 7 (near storage zone)
-      36, 20, 0, 8,     # Agent 8 (near storage zone)
-      36, 35, 0, 9,     # Agent 9 (central zone)
-      36, 45, 0, 10,    # Agent 10 (near storage zone)
-      25, 25, 0, 11,    # Agent 11 (central zone)
-      25, 40, 0, 12     # Agent 12 (central zone)
+      # Induct-side agents (one per left dock, x=8)
+      8, 5, 0, 1,       # Agent 1  (induct dock 1, y=5)
+      8, 12, 0, 2,      # Agent 2  (induct dock 2, y=12)
+      8, 19, 0, 3,      # Agent 3  (induct dock 3, y=19)
+      8, 26, 0, 4,      # Agent 4  (induct dock 4, y=26)
+      8, 33, 0, 5,      # Agent 5  (induct dock 5, y=33)
+      8, 40, 0, 6,      # Agent 6  (induct dock 6, y=40)
+      8, 47, 0, 7,      # Agent 7  (induct dock 7, y=47)
+      8, 54, 0, 8,      # Agent 8  (induct dock 8, y=54)
+      # Storage-side agents (spread across all 6 storage areas)
+      25, 9, 0, 9,      # Agent 9  (storage area 1, left)
+      36, 9, 0, 10,     # Agent 10 (storage area 1, right)
+      25, 18, 0, 11,    # Agent 11 (storage area 2, left)
+      36, 18, 0, 12,    # Agent 12 (storage area 2, right)
+      25, 28, 0, 13,    # Agent 13 (storage area 3, left)
+      38, 32, 0, 14,    # Agent 14 (storage area 3/4, right)
+      25, 42, 0, 15,    # Agent 15 (storage area 4/5, left)
+      38, 42, 0, 16,    # Agent 16 (storage area 4/5, right)
+      25, 50, 0, 17,    # Agent 17 (storage area 5/6, left)
+      36, 50, 0, 18     # Agent 18 (storage area 5/6, right)
     ]
     
     # Induct (entry) stations - Truck docking bays
     # Flattened array format: [x, y, z, station_id]
     induct_stations: [
-      # Left side docks (truck bays along left wall)
+      # Left side docks (truck bays along left wall, 7-cell spacing)
       2, 5, 0, 1,       # Induct/Dock 1
-      2, 13, 0, 2,      # Induct/Dock 2
-      2, 21, 0, 3,      # Induct/Dock 3
-      2, 29, 0, 4,      # Induct/Dock 4
-      2, 37, 0, 5,      # Induct/Dock 5
-      2, 45, 0, 6,      # Induct/Dock 6
-      2, 53, 0, 7,      # Induct/Dock 7
-      2, 56, 0, 8,      # Induct/Dock 8
+      2, 12, 0, 2,      # Induct/Dock 2
+      2, 19, 0, 3,      # Induct/Dock 3
+      2, 26, 0, 4,      # Induct/Dock 4
+      2, 33, 0, 5,      # Induct/Dock 5
+      2, 40, 0, 6,      # Induct/Dock 6
+      2, 47, 0, 7,      # Induct/Dock 7
+      2, 54, 0, 8,      # Induct/Dock 8
       # Right side docks (near maintenance bay)
       54, 4, 0, 9,
       55, 4, 0, 10,
@@ -196,7 +205,7 @@ create_gridworld_node:
     # Charging stations - Dedicated docking cells inside the maintenance bay
     # Flattened array format: [x, y, z, station_id]
     # Located at x=54 (left edge of maintenance bay), accessible from x=53
-    # 12 stations for 12 agents so all can charge without corridor congestion
+    # 12 stations for 18 agents - realistic contention, not all agents charge simultaneously
     # Cells overwrite the obstacle marking, so no obstacle_regions change needed
     charging_stations: [
       54, 7, 0, 1,      # Charging Station 1
