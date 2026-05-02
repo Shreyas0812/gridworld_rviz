@@ -18,7 +18,7 @@
 #   Charging area tucked in the top-right corner (maintenance bay).
 #   Agent count based on Boysen et al.'s modeled throughput of ~2-3 robots per lane.
 #
-# Grid: 44x28 | Agents: 50 | Induct: 6 | Eject: 10 | Charging: 8
+# Grid: 44x28 | Agents: 12 | Induct: 6 | Eject: 10 | Charging: 8
 
 create_gridworld_node:
   ros__parameters:
@@ -35,8 +35,9 @@ create_gridworld_node:
       0,  0, 0,  1, 27, 0,       # Left border
       42, 0, 0, 43, 27, 0,       # Right border
 
-      # Maintenance / charging bay (top-right corner, accessible from x=37 or y=21)
-      38, 22, 0, 41, 25, 0,      # Maintenance bay area (extended to y=22-25)
+      # Maintenance / charging bay (top-right corner, accessible from x=37 or y=23)
+      # Trimmed to y=24-25 so that eject station (40,23,0) remains accessible
+      38, 24, 0, 41, 25, 0,      # Maintenance bay area
 
       # Sorting-lane dividers: partial horizontal barriers separating 6 transfer lanes
       # Lanes centered at y=3, 7, 11, 15, 19, 23
@@ -56,29 +57,13 @@ create_gridworld_node:
     ]
 
     # Agent positions: [x, y, z, agent_id]
-    # 50 agents: 8 x-positions × 6 lanes + 2 extras
-    # Lanes at y=3,7,11,15,19,23  |  x-columns: receiving(6,9,12) gap1(20) gap2(25,32) staging(35,38)
-    # Note: x=38 agents shifted to y=21 on lane 6 to avoid maintenance bay (y=22-25)
+    # 12 agents: 2 x-positions × 6 lanes (~0.97 agents/100m², Boysen: 2/lane)
+    # x=9 (left floor, near induct) and x=32 (crossing gap 2, near eject)
     agent_positions: [
-      # x=6 (receiving side, all 6 lanes)
-       6,  3, 0,  1,   6,  7, 0,  2,   6, 11, 0,  3,   6, 15, 0,  4,   6, 19, 0,  5,   6, 23, 0,  6,
       # x=9 (left floor section, all 6 lanes)
-       9,  3, 0,  7,   9,  7, 0,  8,   9, 11, 0,  9,   9, 15, 0, 10,   9, 19, 0, 11,   9, 23, 0, 12,
-      # x=12 (before divider gap, passable at lane centers, all 6 lanes)
-      12,  3, 0, 13,  12,  7, 0, 14,  12, 11, 0, 15,  12, 15, 0, 16,  12, 19, 0, 17,  12, 23, 0, 18,
-      # x=20 (crossing gap 1, all 6 lanes)
-      20,  3, 0, 19,  20,  7, 0, 20,  20, 11, 0, 21,  20, 15, 0, 22,  20, 19, 0, 23,  20, 23, 0, 24,
-      # x=25 (right of crossing gap 1, passable at lane centers, all 6 lanes)
-      25,  3, 0, 25,  25,  7, 0, 26,  25, 11, 0, 27,  25, 15, 0, 28,  25, 19, 0, 29,  25, 23, 0, 30,
+       9,  3, 0,  1,   9,  7, 0,  2,   9, 11, 0,  3,   9, 15, 0,  4,   9, 19, 0,  5,   9, 23, 0,  6,
       # x=32 (crossing gap 2, all 6 lanes)
-      32,  3, 0, 31,  32,  7, 0, 32,  32, 11, 0, 33,  32, 15, 0, 34,  32, 19, 0, 35,  32, 23, 0, 36,
-      # x=35 (pre-dock staging, all 6 lanes)
-      35,  3, 0, 37,  35,  7, 0, 38,  35, 11, 0, 39,  35, 15, 0, 40,  35, 19, 0, 41,  35, 23, 0, 42,
-      # x=38 (near shipping docks; lane 6 at y=21 to avoid maintenance bay obstacle y=22-25)
-      38,  3, 0, 43,  38,  7, 0, 44,  38, 11, 0, 45,  38, 15, 0, 46,  38, 19, 0, 47,  38, 21, 0, 48,
-      # Two additional agents to reach 50
-      15,  3, 0, 49,             # Left-side divider zone, lane 1
-      28, 23, 0, 50              # Right-side divider zone, lane 6
+      32,  3, 0,  7,  32,  7, 0,  8,  32, 11, 0,  9,  32, 15, 0, 10,  32, 19, 0, 11,  32, 23, 0, 12
     ]
 
     # Induct stations: left-wall receiving docks (truck arrival)
@@ -110,10 +95,10 @@ create_gridworld_node:
     ]
 
     energy:
-      max_energy: 90
+      max_energy: 1150                 # Maximum battery capacity (grid steps); tuned for ~10 tasks per charge cycle
       charge_duration: 20
-      charge_rate: 1
-      charging_trigger_multiplier: 3.0
+      charge_speed: 1                  # Charge-remaining decrements per timestep; higher = shorter docking time (charge_duration / charge_speed = timesteps at charger)
+      charging_trigger_multiplier: 5.0
 
     # Charging stations in top-right maintenance bay (2x4 grid of cells)
     # Cells overwrite obstacle marking, accessible from x=37 or y=21
@@ -126,6 +111,18 @@ create_gridworld_node:
       39, 24, 0, 6,
       38, 25, 0, 7,
       39, 25, 0, 8
+    ]
+
+    # Idle-task stations for idle fallback (non-charging parking)
+    # Placed at x=3,4 per lane y-level — clear of all obstacles, induct stations (x=2),
+    # charging stations (x=38,39), dividers, and agent starts (x=9,32)
+    idle_task_stations: [
+      3,  3, 0,  1,   4,  3, 0,  2,
+      3,  7, 0,  3,   4,  7, 0,  4,
+      3, 11, 0,  5,   4, 11, 0,  6,
+      3, 15, 0,  7,   4, 15, 0,  8,
+      3, 19, 0,  9,   4, 19, 0, 10,
+      3, 23, 0, 11,   4, 23, 0, 12
     ]
 
     visualization:

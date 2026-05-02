@@ -119,10 +119,10 @@ create_gridworld_node:
     
     # Energy / charging parameters
     energy:
-      max_energy: 100                  # Maximum battery capacity (grid steps)
+      max_energy: 650                  # Maximum battery capacity (grid steps); tuned for ~10 tasks per charge cycle
       charge_duration: 20              # Timesteps spent at charger per visit
-      charge_rate: 1                   # Energy units restored per charging timestep
-      charging_trigger_multiplier: 3.0 # Trigger charging when energy <= multiplier * dist_to_charger
+      charge_speed: 1                  # Charge-remaining decrements per timestep; higher = shorter docking time (charge_duration / charge_speed = timesteps at charger)
+      charging_trigger_multiplier: 5.0 # Trigger charging when energy <= multiplier * dist_to_charger
 
     # Charging stations - Dedicated docking cells inside the maintenance bay
     # Flattened array format: [x, y, z, station_id]
@@ -136,6 +136,17 @@ create_gridworld_node:
       26, 14, 0, 4,    # Charging Station 4
       26, 20, 0, 5,    # Charging Station 5
       26, 23, 0, 6     # Charging Station 6
+    ]
+
+    # Idle-task stations (edge parking cells behind induct stations)
+    # Agents in idle_task are still allocatable; these are just standby slots.
+    idle_task_stations: [
+      3, 3, 0, 1,
+      3, 11, 0, 2,
+      3, 19, 0, 3,
+      3, 27, 0, 4,
+      4, 3, 0, 5,
+      4, 27, 0, 6
     ]
 
     # Visualization settings
